@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('jenis_cutis', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedTinyInteger('kode'); // 1-6 sesuai formulir
+            $table->string('nama'); // Tahunan, Besar, Sakit, Melahirkan, dst
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('jenis_cutis');
+    }
+};
