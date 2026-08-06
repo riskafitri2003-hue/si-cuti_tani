@@ -97,22 +97,6 @@
             box-shadow: 0 6px 20px rgba(21,101,192,.4);
             color: #fff;
         }
-        .demo-accounts {
-            margin-top: 16px;
-            padding: 12px 14px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #888;
-        }
-        .demo-accounts summary {
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-        }
-        .demo-accounts code {
-            color: #1565c0;
-        }
     </style>
 </head>
 <body>
@@ -144,19 +128,6 @@
                     <i class="bi bi-box-arrow-in-right me-1"></i> Masuk
                 </button>
             </form>
-            <details class="demo-accounts">
-                <summary><i class="bi bi-info-circle me-1"></i> Akun Contoh</summary>
-                <div class="mt-2">
-                    <div><code>Admin</code> &mdash; Admin</div>
-                    <div><code>198605102011012001</code> &mdash; Pegawai</div>
-                    <div><code>Atasan Langsung</code> &mdash; Kabid</div>
-                    <div><code>kasubag</code> &mdash; Kasubag Umum</div>
-                    <div><code>sekretaris</code> &mdash; Sekretaris</div>
-                    <div><code>Kepala Dinas </code> &mdash; Kepala Dinas</div>
-                    <div><code>123456789</code> &mdash; User Baru</div>
-                    <div class="mt-1 text-muted">Semua password: <code>password</code> (kecuali User Baru: <code>220703</code>)</div>
-                </div>
-            </details>
         </div>
     </div>
 </body>
