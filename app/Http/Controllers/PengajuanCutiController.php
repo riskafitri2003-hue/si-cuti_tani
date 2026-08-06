@@ -104,8 +104,7 @@ class PengajuanCutiController extends Controller
             $base64 = $request->input('tanda_tangan_data');
             $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
             $filename = 'ttd_' . $pegawaiNip . '_' . time() . '.png';
-            $path = storage_path('app/public/tanda_tangan/' . $filename);
-            file_put_contents($path, $imageData);
+            Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
             $ttdPath = 'tanda_tangan/' . $filename;
         }
 
@@ -348,8 +347,7 @@ class PengajuanCutiController extends Controller
             $base64 = $request->input('tanda_tangan_data');
             $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
             $filename = 'ttd_kd_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
-            $path = storage_path('app/public/tanda_tangan/' . $filename);
-            file_put_contents($path, $imageData);
+            Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
             $data['tanda_tangan_kepala_dinas'] = 'tanda_tangan/' . $filename;
         }
 
