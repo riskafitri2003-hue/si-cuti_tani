@@ -45,6 +45,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/rekap-saran', [SaranController::class, 'index'])->name('saran.index');
     });
 
+    // Ganti password (self-service, semua role)
+    Route::get('/ganti-password', [AuthController::class, 'showChangePassword'])->name('password.change.form');
+    Route::post('/ganti-password', [AuthController::class, 'changePassword'])->name('password.change.update');
+
     // Pengajuan cuti
     Route::get('/cuti', [PengajuanCutiController::class, 'index'])->name('cuti.index');
     Route::get('/cuti/create', [PengajuanCutiController::class, 'create'])->name('cuti.create');

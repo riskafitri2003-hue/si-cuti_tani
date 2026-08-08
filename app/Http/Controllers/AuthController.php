@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -41,5 +42,30 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    public function showChangePassword()
+    {
+        return view('auth.change_password');
+    }
+
+    public function changePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required'],
+            'new_password' => ['required', 'string', 'min:3', 'confirmed'],
+        ]);
+
+        if (! Hash::check($data['current_password'], Auth::user()->password)) {
+            return back()->withErrors([
+                'current_password' => 'Password lama tidak sesuai.',
+            ])->withInput($request->except('current_password'));
+        }
+
+        Auth::user()->update([
+            'password' => $data['new_password'],
+        ]);
+
+        return back()->with('success', 'Password berhasil diubah.');
     }
 }

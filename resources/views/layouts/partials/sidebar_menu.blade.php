@@ -44,4 +44,9 @@
         </a>
     </li>
     @endif
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('password.change.*') ? 'active' : '' }}" href="{{ route('password.change.form') }}">
+            <i class="bi bi-key me-1"></i>Ganti Password
+        </a>
+    </li>
 </ul>
