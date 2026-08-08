@@ -100,4 +100,14 @@ class User extends Authenticatable
     {
         return $this->role === 'walikota';
     }
+
+    public function isSekda(): bool
+    {
+        return $this->role === 'sekda';
+    }
+
+    public function canBeAtasanLangsung(): bool
+    {
+        return in_array($this->role, ['atasan_langsung', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota']);
+    }
 }

@@ -32,6 +32,8 @@ class PengajuanCutiController extends Controller
             $query->where('status', 'diproses_sekretaris');
         } elseif ($user->isKepalaDinas()) {
             $query->where('status', 'diproses_kepala_dinas');
+        } elseif ($user->isSekda()) {
+            $query->where('status', 'diproses_sekda');
         } elseif ($user->isWalikota()) {
             $query->where('status', 'diproses_walikota');
         }
@@ -45,16 +47,22 @@ class PengajuanCutiController extends Controller
     {
         $user = Auth::user();
         $jenisCutis = JenisCuti::orderBy('kode')->get();
-        $atasanLangsungs = \App\Models\User::where('role', 'atasan_langsung')->orderBy('nama')->get();
+        $atasanLangsungs = \App\Models\User::whereIn('role', ['atasan_langsung', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota'])
+            ->orderBy('nama')->get();
 
         $pegawais = $user->isAdmin() ? Pegawai::with('saldoCutis')->orderBy('nama')->get() : collect();
 
-        return view('cuti.create', compact('jenisCutis', 'pegawais', 'atasanLangsungs'));
+        $isKepalaDinasApplicant = $user->isKepalaDinas();
+
+        return view('cuti.create', compact('jenisCutis', 'pegawais', 'atasanLangsungs', 'isKepalaDinasApplicant'));
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        $pegawaiNip = $user->isAdmin() ? $request->input('nip') : $user->nip;
+        $isKepalaDinasApplicant = \App\Models\User::where('nip', $pegawaiNip)->value('role') === 'kepala_dinas';
 
         $rules = [
             'kode_jenis_cuti' => ['required', 'exists:jenis_cutis,kode'],
@@ -65,7 +73,9 @@ class PengajuanCutiController extends Controller
             'telpon_selama_cuti' => ['nullable', 'string', 'max:30'],
             'dokumen_pendukung' => ['nullable', 'file', 'max:2048', 'mimes:pdf,jpg,jpeg,png'],
             'tanda_tangan_data' => ['nullable', 'string'],
-            'atasan_langsung_user_id' => ['required', 'exists:users,user_id'],
+            'atasan_langsung_user_id' => $isKepalaDinasApplicant
+                ? ['nullable', 'exists:users,user_id']
+                : ['required', 'exists:users,user_id'],
         ];
 
         if ($user->isAdmin()) {
@@ -119,12 +129,13 @@ class PengajuanCutiController extends Controller
             'telpon_selama_cuti' => $data['telpon_selama_cuti'] ?? null,
             'dokumen_pendukung' => $dokumenPath,
             'tanda_tangan_pegawai' => $ttdPath,
-            'atasan_langsung_user_id' => $data['atasan_langsung_user_id'],
+            'atasan_langsung_user_id' => $isKepalaDinasApplicant ? null : $data['atasan_langsung_user_id'],
             'tanggal_pengajuan' => now(),
-            'status' => 'diajukan',
+            'status' => $isKepalaDinasApplicant ? 'diproses_sekda' : 'diajukan',
             'status_atasan_langsung' => 'pending',
             'status_kasubag' => 'pending',
             'status_sekretaris' => 'pending',
+            'status_sekda' => 'pending',
             'status_kepala_dinas' => 'pending',
             'status_walikota' => 'pending',
         ]);
@@ -140,17 +151,32 @@ class PengajuanCutiController extends Controller
             }
         }
 
-        // Kirim WA otomatis ke Atasan Langsung
-        $atasan = User::find($data['atasan_langsung_user_id']);
-        if ($atasan) {
-            app(WhatsAppService::class)->kirimKeApprover(
-                $cuti,
-                $atasan,
-                $this->pesanPermohonanPersetujuan($cuti, $atasan)
-            );
+        // Kirim WA otomatis ke Atasan Langsung / Sekretaris Daerah
+        if ($isKepalaDinasApplicant) {
+            $approver = $this->getNextApprover($cuti);
+            if ($approver) {
+                app(WhatsAppService::class)->kirimKeApprover(
+                    $cuti,
+                    $approver,
+                    $this->pesanPermohonanPersetujuan($cuti, $approver)
+                );
+            }
+        } else {
+            $atasan = User::find($data['atasan_langsung_user_id']);
+            if ($atasan) {
+                app(WhatsAppService::class)->kirimKeApprover(
+                    $cuti,
+                    $atasan,
+                    $this->pesanPermohonanPersetujuan($cuti, $atasan)
+                );
+            }
         }
 
-        return redirect()->route('cuti.show', $cuti)->with('success', 'Pengajuan cuti berhasil dikirim. Silakan kirim persetujuan ke atasan via WhatsApp atau Email.');
+        $pesan = $isKepalaDinasApplicant
+            ? 'Pengajuan cuti berhasil dikirim. Menunggu tanda tangan Sekretaris Daerah dan Wali Kota.'
+            : 'Pengajuan cuti berhasil dikirim. Silakan kirim persetujuan ke atasan via WhatsApp atau Email.';
+
+        return redirect()->route('cuti.show', $cuti)->with('success', $pesan);
     }
 
     public function show(PengajuanCuti $cuti)
@@ -376,39 +402,109 @@ class PengajuanCutiController extends Controller
     }
 
     /**
-     * Approval Wali Kota (khusus cuti besar/haji/umroh)
+     * Tanda tangan Sekretaris Daerah (khusus pengaju Kepala Dinas)
+     */
+    public function approveSekdaForm(PengajuanCuti $cuti)
+    {
+        abort_if($cuti->status !== 'diproses_sekda', 403);
+        abort_if(! $cuti->isKepalaDinasApplicant(), 403);
+
+        return view('cuti.approve_sekda', compact('cuti'));
+    }
+
+    public function approveSekda(Request $request, PengajuanCuti $cuti)
+    {
+        abort_if($cuti->status !== 'diproses_sekda', 403);
+        abort_if(! $cuti->isKepalaDinasApplicant(), 403);
+
+        $data = $request->validate([
+            'nama_sekda' => ['required', 'string', 'max:255'],
+            'nip_sekda' => ['nullable', 'string', 'max:50'],
+            'tanda_tangan_data' => ['required', 'string'],
+        ]);
+
+        $base64 = $request->input('tanda_tangan_data');
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+        $filename = 'ttd_sekda_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
+        Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
+
+        $cuti->update([
+            'nama_sekda' => $data['nama_sekda'],
+            'nip_sekda' => $data['nip_sekda'],
+            'tanggal_sekda' => now(),
+            'status_sekda' => 'disetujui',
+            'tanda_tangan_sekda' => 'tanda_tangan/' . $filename,
+            'status' => 'diproses_walikota',
+        ]);
+
+        $this->kirimNotifikasi($cuti, 'Sekretaris Daerah');
+        $this->kirimNotifikasiWa($cuti, 'Sekretaris Daerah');
+
+        return redirect()->route('cuti.index')->with('success', 'Tanda tangan Sekretaris Daerah tersimpan. Menunggu tanda tangan Wali Kota.');
+    }
+
+    /**
+     * Approval Wali Kota (khusus cuti besar/haji/umroh & tanda tangan pengaju Kepala Dinas)
      */
     public function approveWalikotaForm(PengajuanCuti $cuti)
     {
         abort_if($cuti->status !== 'diproses_walikota', 403);
 
-        return view('cuti.approve_walikota', compact('cuti'));
+        $isKepalaDinas = $cuti->isKepalaDinasApplicant();
+
+        return view('cuti.approve_walikota', compact('cuti', 'isKepalaDinas'));
     }
 
     public function approveWalikota(Request $request, PengajuanCuti $cuti)
     {
         abort_if($cuti->status !== 'diproses_walikota', 403);
 
-        $data = $request->validate([
-            'status_walikota' => ['required', 'in:disetujui,tidak_disetujui'],
-            'catatan_walikota' => ['nullable', 'string'],
-            'nama_walikota' => ['required', 'string', 'max:255'],
-            'nip_walikota' => ['nullable', 'string', 'max:50'],
-        ]);
+        $isKepalaDinas = $cuti->isKepalaDinasApplicant();
 
-        $data['tanggal_walikota'] = now();
-        $data['status'] = $data['status_walikota'] === 'tidak_disetujui' ? 'ditolak' : 'disetujui';
+        if ($isKepalaDinas) {
+            $data = $request->validate([
+                'nama_walikota' => ['required', 'string', 'max:255'],
+                'nip_walikota' => ['nullable', 'string', 'max:50'],
+                'tanda_tangan_data' => ['required', 'string'],
+            ]);
 
-        $cuti->update($data);
+            $base64 = $request->input('tanda_tangan_data');
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+            $filename = 'ttd_wk_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
+            Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
 
-        if ($data['status_walikota'] === 'tidak_disetujui') {
+            $data['tanggal_walikota'] = now();
+            $data['status_walikota'] = 'disetujui';
+            $data['tanda_tangan_walikota'] = 'tanda_tangan/' . $filename;
+            $data['status'] = 'disetujui';
+
+            $cuti->update($data);
+        } else {
+            $data = $request->validate([
+                'status_walikota' => ['required', 'in:disetujui,tidak_disetujui'],
+                'catatan_walikota' => ['nullable', 'string'],
+                'nama_walikota' => ['required', 'string', 'max:255'],
+                'nip_walikota' => ['nullable', 'string', 'max:50'],
+            ]);
+
+            $data['tanggal_walikota'] = now();
+            $data['status'] = $data['status_walikota'] === 'tidak_disetujui' ? 'ditolak' : 'disetujui';
+
+            $cuti->update($data);
+        }
+
+        if ($cuti->status === 'ditolak') {
             SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n', $cuti->lama_cuti_hari);
         }
 
         $this->kirimNotifikasi($cuti, 'Wali Kota');
         $this->kirimNotifikasiWa($cuti, 'Wali Kota');
 
-        return redirect()->route('cuti.index')->with('success', 'Keputusan Wali Kota tersimpan.');
+        $pesan = $isKepalaDinas
+            ? 'Tanda tangan Wali Kota tersimpan. Cuti disetujui.'
+            : 'Keputusan Wali Kota tersimpan.';
+
+        return redirect()->route('cuti.index')->with('success', $pesan);
     }
 
     /**
@@ -503,6 +599,7 @@ class PengajuanCutiController extends Controller
         $role = match ($cuti->status) {
             'diproses_kasubag' => 'kasubag',
             'diproses_sekretaris' => 'sekretaris',
+            'diproses_sekda' => 'sekda',
             'diproses_kepala_dinas' => 'kepala_dinas',
             'diproses_walikota' => 'walikota',
             default => null,

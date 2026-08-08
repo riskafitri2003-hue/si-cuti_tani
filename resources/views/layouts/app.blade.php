@@ -197,6 +197,7 @@
         .badge-kasubag { background: #0dcaf0; color: #fff; }
         .badge-sekretaris { background: #fd7e14; color: #fff; }
         .badge-kepala-dinas { background: #198754; color: #fff; }
+        .badge-sekda { background: #3949ab; color: #fff; }
         .badge-walikota { background: #6f42c1; color: #fff; }
         .badge-pending { background: #6c757d; color: #fff; }
         .badge-diajukan { background: #6c757d; color: #fff; }
@@ -226,6 +227,7 @@
         .section-kasubag { border-left: 4px solid #0dcaf0; }
         .section-sekretaris { border-left: 4px solid #fd7e14; }
         .section-kepala-dinas { border-left: 4px solid #198754; }
+        .section-sekda { border-left: 4px solid #3949ab; }
         .section-walikota { border-left: 4px solid #6f42c1; }
         .section-header {
             padding: 10px 16px;

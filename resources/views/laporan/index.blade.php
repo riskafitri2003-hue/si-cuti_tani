@@ -141,6 +141,7 @@ $statusIcons = [
                         <th class="text-center"><span class="badge-kasubag badge">Kasubag</span></th>
                         <th class="text-center"><span class="badge-sekretaris badge">Sekretaris</span></th>
                     <th class="text-center"><span class="badge-kepala-dinas badge">Kepala Dinas</span></th>
+                    <th class="text-center"><span class="badge" style="background:#3949ab;color:#fff;">Sekretaris Daerah</span></th>
                     <th class="text-center"><span class="badge" style="background:#6f42c1;color:#fff;">Wkota</span></th>
                     <th>Status</th>
                         <th>Tgl Pengajuan</th>
@@ -153,6 +154,7 @@ $statusIcons = [
                         $ikab = $statusIcons[$p->status_atasan_langsung] ?? $statusIcons['pending'];
                         $ikas = $statusIcons[$p->status_kasubag] ?? $statusIcons['pending'];
                         $isek = $statusIcons[$p->status_sekretaris] ?? $statusIcons['pending'];
+                        $isekda = $statusIcons[$p->status_sekda] ?? $statusIcons['pending'];
                         $ikad = $statusIcons[$p->status_kepala_dinas] ?? $statusIcons['pending'];
                         $iwk = $statusIcons[$p->status_walikota] ?? $statusIcons['pending'];
                     @endphp
@@ -183,7 +185,15 @@ $statusIcons = [
                             <div class="text-status">{{ $ikad['label'] }}</div>
                         </td>
                         <td class="text-center">
-                            @if(in_array($p->jenisCuti->kode, [2, 7]))
+                            @if($p->isKepalaDinasApplicant())
+                                <i class="bi {{ $isekda['icon'] }} {{ $isekda['class'] }}"></i>
+                                <div class="text-status">{{ $isekda['label'] }}</div>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if(in_array($p->jenisCuti->kode, [2, 7]) || $p->isKepalaDinasApplicant())
                                 <i class="bi {{ $iwk['icon'] }} {{ $iwk['class'] }}"></i>
                                 <div class="text-status">{{ $iwk['label'] }}</div>
                             @else
@@ -194,7 +204,7 @@ $statusIcons = [
                         <td class="small">{{ $p->tanggal_pengajuan?->format('d/m/Y') }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="16" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>Tidak ada data.</td></tr>
+                    <tr><td colspan="17" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>Tidak ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -38,6 +38,11 @@
                     </div>
                     <div class="mb-0">
                         <label class="form-label"><i class="bi bi-person-badge me-1 text-primary"></i>Atasan Langsung</label>
+                        @if($isKepalaDinasApplicant)
+                            <div class="alert alert-info py-2 mb-1 small">
+                                <i class="bi bi-info-circle me-1"></i>Pengajuan Kepala Dinas tidak memerlukan persetujuan atasan. Cukup tanda tangan Sekretaris Daerah lalu Wali Kota.
+                            </div>
+                        @else
                         <select name="atasan_langsung_user_id" class="form-select" required>
                             <option value="">-- Pilih Atasan Langsung --</option>
                             @foreach($atasanLangsungs as $atasanLangsung)
@@ -45,6 +50,7 @@
                             @endforeach
                         </select>
                         <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Pilih atasan langsung yang membimbing Anda.</p>
+                        @endif
                     </div>
                     <div class="mt-3 mb-0">
                         <label class="form-label"><i class="bi bi-chat-dots me-1 text-primary"></i>III. Alasan Cuti</label>

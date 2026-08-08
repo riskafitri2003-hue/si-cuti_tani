@@ -114,6 +114,7 @@
                             <option value="kasubag">Kasubag Umum</option>
                             <option value="sekretaris">Sekretaris</option>
                             <option value="kepala_dinas">Kepala Dinas</option>
+                            <option value="sekda">Sekretaris Daerah</option>
                             <option value="walikota">Walikota</option>
                             <option value="admin">Admin</option>
                         </select>
@@ -153,6 +154,7 @@
                             <option value="kasubag" {{ $pegawai->user->role === 'kasubag' ? 'selected' : '' }}>Kasubag Umum</option>
                             <option value="sekretaris" {{ $pegawai->user->role === 'sekretaris' ? 'selected' : '' }}>Sekretaris</option>
                             <option value="kepala_dinas" {{ $pegawai->user->role === 'kepala_dinas' ? 'selected' : '' }}>Kepala Dinas</option>
+                            <option value="sekda" {{ $pegawai->user->role === 'sekda' ? 'selected' : '' }}>Sekretaris Daerah</option>
                             <option value="walikota" {{ $pegawai->user->role === 'walikota' ? 'selected' : '' }}>Walikota</option>
                             <option value="admin" {{ $pegawai->user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>

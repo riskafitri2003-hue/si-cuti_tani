@@ -24,6 +24,8 @@ class DashboardController extends Controller
             $query->where('status', 'diproses_sekretaris');
         } elseif ($user->isKepalaDinas()) {
             $query->where('status', 'diproses_kepala_dinas');
+        } elseif ($user->isSekda()) {
+            $query->where('status', 'diproses_sekda');
         } elseif ($user->isWalikota()) {
             $query->where('status', 'diproses_walikota');
         }
@@ -36,6 +38,7 @@ class DashboardController extends Controller
             'diproses_atasan_langsung' => PengajuanCuti::where('status', 'diproses_atasan_langsung')->count(),
             'diproses_kasubag' => PengajuanCuti::where('status', 'diproses_kasubag')->count(),
             'diproses_sekretaris' => PengajuanCuti::where('status', 'diproses_sekretaris')->count(),
+            'diproses_sekda' => PengajuanCuti::where('status', 'diproses_sekda')->count(),
             'diproses_kepala_dinas' => PengajuanCuti::where('status', 'diproses_kepala_dinas')->count(),
             'diproses_walikota' => PengajuanCuti::where('status', 'diproses_walikota')->count(),
             'disetujui' => PengajuanCuti::where('status', 'disetujui')->count(),

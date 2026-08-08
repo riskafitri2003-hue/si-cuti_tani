@@ -36,6 +36,7 @@
                         <option value="kasubag">Kasubag Umum</option>
                         <option value="sekretaris">Sekretaris</option>
                         <option value="kepala_dinas">Kepala Dinas</option>
+                        <option value="sekda">Sekretaris Daerah</option>
                         <option value="walikota">Walikota</option>
                         <option value="admin">Admin</option>
                     </select>

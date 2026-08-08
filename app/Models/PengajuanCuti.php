@@ -37,7 +37,10 @@ class PengajuanCuti extends Model
         'tanda_tangan_kepala_dinas', 'nomor_surat', 'tanggal_surat',
 
         // Walikota
-        'nama_walikota', 'nip_walikota', 'tanggal_walikota', 'status_walikota',
+        'nama_walikota', 'nip_walikota', 'tanggal_walikota', 'status_walikota', 'tanda_tangan_walikota',
+
+        // Sekretaris Daerah
+        'nama_sekda', 'nip_sekda', 'tanggal_sekda', 'status_sekda', 'tanda_tangan_sekda',
     ];
 
     protected $casts = [
@@ -50,6 +53,7 @@ class PengajuanCuti extends Model
         'tanggal_sekretaris' => 'date',
         'tanggal_kepala_dinas' => 'date',
         'tanggal_walikota' => 'date',
+        'tanggal_sekda' => 'date',
     ];
 
     public function isCutiKhusus(): bool
@@ -60,6 +64,16 @@ class PengajuanCuti extends Model
     public function needsWalikota(): bool
     {
         return $this->isCutiKhusus();
+    }
+
+    public function isKepalaDinasApplicant(): bool
+    {
+        return optional($this->pegawai?->user)->role === 'kepala_dinas';
+    }
+
+    public function isAlurKepalaDinas(): bool
+    {
+        return $this->isKepalaDinasApplicant() && in_array($this->status, ['diproses_sekda', 'diproses_walikota', 'disetujui']);
     }
 
     public function pegawai()
@@ -89,6 +103,7 @@ class PengajuanCuti extends Model
             'diproses_atasan_langsung' => 'info',
             'diproses_kasubag' => 'info',
             'diproses_sekretaris' => 'info',
+            'diproses_sekda' => 'info',
             'diproses_kepala_dinas' => 'primary',
             'diproses_walikota' => 'purple',
             'disetujui' => 'success',

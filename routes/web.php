@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cuti/{cuti}/saran', [PengajuanCutiController::class, 'storeSaran'])->name('cuti.saran.store');
 
     // Approval Atasan Langsung
-    Route::middleware('role:atasan_langsung')->group(function () {
+    Route::middleware('role:atasan_langsung,sekretaris,kepala_dinas,sekda,walikota')->group(function () {
         Route::get('/cuti/{cuti}/atasan-langsung', [PengajuanCutiController::class, 'approveAtasanLangsungForm'])->name('cuti.atasan-langsung.form');
         Route::post('/cuti/{cuti}/atasan-langsung', [PengajuanCutiController::class, 'approveAtasanLangsung'])->name('cuti.atasan-langsung.store');
     });
@@ -76,6 +76,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:kepala_dinas')->group(function () {
         Route::get('/cuti/{cuti}/kepala-dinas', [PengajuanCutiController::class, 'approveKepalaDinasForm'])->name('cuti.kepala-dinas.form');
         Route::post('/cuti/{cuti}/kepala-dinas', [PengajuanCutiController::class, 'approveKepalaDinas'])->name('cuti.kepala-dinas.store');
+    });
+
+    // Tanda tangan Sekretaris Daerah
+    Route::middleware('role:sekda')->group(function () {
+        Route::get('/cuti/{cuti}/sekda', [PengajuanCutiController::class, 'approveSekdaForm'])->name('cuti.sekda.form');
+        Route::post('/cuti/{cuti}/sekda', [PengajuanCutiController::class, 'approveSekda'])->name('cuti.sekda.store');
     });
 
     // Approval Wali Kota

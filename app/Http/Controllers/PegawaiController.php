@@ -82,7 +82,7 @@ class PegawaiController extends Controller
 
         $data = $request->validate([
             'password' => ['required', 'string', 'min:3', 'confirmed'],
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,walikota'],
+            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
         ]);
 
         User::create([
@@ -202,7 +202,7 @@ class PegawaiController extends Controller
 
         $data = $request->validate([
             'password' => ['required', 'string', 'min:3', 'confirmed'],
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,walikota'],
+            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
         ]);
 
         User::create([
@@ -222,7 +222,7 @@ class PegawaiController extends Controller
         }
 
         $data = $request->validate([
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,walikota'],
+            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
             'password' => ['nullable', 'string', 'min:3'],
         ]);
 
