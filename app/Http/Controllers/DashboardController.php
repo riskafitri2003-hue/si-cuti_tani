@@ -14,20 +14,27 @@ class DashboardController extends Controller
 
         $query = PengajuanCuti::with(['pegawai', 'jenisCuti']);
 
+        $stageMap = [
+            'kasubag' => 'diproses_kasubag',
+            'sekretaris' => 'diproses_sekretaris',
+            'kepala_dinas' => 'diproses_kepala_dinas',
+            'sekda' => 'diproses_sekda',
+            'walikota' => 'diproses_walikota',
+        ];
+
         if ($user->isPegawai()) {
             $query->where('nip', $user->nip);
         } elseif ($user->isAtasanLangsung()) {
             $query->where('status', 'diajukan');
-        } elseif ($user->isKasubag()) {
-            $query->where('status', 'diproses_kasubag');
-        } elseif ($user->isSekretaris()) {
-            $query->where('status', 'diproses_sekretaris');
-        } elseif ($user->isKepalaDinas()) {
-            $query->where('status', 'diproses_kepala_dinas');
-        } elseif ($user->isSekda()) {
-            $query->where('status', 'diproses_sekda');
-        } elseif ($user->isWalikota()) {
-            $query->where('status', 'diproses_walikota');
+        } elseif (isset($stageMap[$user->role])) {
+            // Approver melihat cuti di tahapnya, atau cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+            $query->where(function ($q) use ($user, $stageMap) {
+                $q->where('status', $stageMap[$user->role])
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->where('status', 'diajukan')
+                            ->where('atasan_langsung_user_id', $user->user_id);
+                    });
+            });
         }
 
         $pengajuanCutis = $query->latest()->take(10)->get();

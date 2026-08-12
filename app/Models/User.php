@@ -108,6 +108,6 @@ class User extends Authenticatable
 
     public function canBeAtasanLangsung(): bool
     {
-        return in_array($this->role, ['atasan_langsung', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota']);
+        return in_array($this->role, ['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota']);
     }
 }

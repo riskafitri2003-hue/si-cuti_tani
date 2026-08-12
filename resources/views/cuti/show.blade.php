@@ -34,7 +34,7 @@
         @endif
         @if(auth()->user()->isWalikota() && $cuti->status === 'diproses_walikota')
             <a href="{{ route('cuti.walikota.form', $cuti) }}" class="btn btn-sm rounded-pill px-3" style="background:#6f42c1;color:#fff;">
-                <i class="bi bi-check2-square me-1"></i>{{ $cuti->isKepalaDinasApplicant() ? 'Tanda Tangan Walikota' : 'Putuskan Walikota' }}
+                <i class="bi bi-pen me-1"></i>Tanda Tangan Wali Kota
             </a>
         @endif
         @if($cuti->pegawai->wa && auth()->user()->isAdmin())
@@ -378,6 +378,11 @@
                     &mdash; NIP. {{ $cuti->nip_atasan_langsung ?? '-' }}
                     <span class="text-muted">({{ $cuti->tanggal_atasan_langsung?->format('d M Y') }})</span>
                 </div>
+                @if($cuti->tanda_tangan_atasan_langsung && $cuti->status_atasan_langsung === 'disetujui')
+                <div class="mt-2">
+                    <img src="{{ asset('storage/' . $cuti->tanda_tangan_atasan_langsung) }}" alt="Tanda Tangan Atasan Langsung" style="max-width:180px;border:1px solid #ddd;border-radius:6px;padding:4px;background:#fff;">
+                </div>
+                @endif
                 @else
                 <div class="text-muted small"><i class="bi bi-clock me-1"></i>Menunggu pertimbangan Atasan Langsung</div>
                 @endif
@@ -564,11 +569,11 @@
         </div>
         @endif
 
-        {{-- VII-E. WALIKOTA (khusus cuti besar/haji/umroh / tanda tangan pengaju Kepala Dinas) --}}
+        {{-- VII-E. TANDA TANGAN WALIKOTA (cuti besar/haji/umroh & pengaju Kepala Dinas) --}}
         @if($cuti->needsWalikota() || $cuti->isKepalaDinasApplicant())
         <div class="section-walikota mb-3 bg-white" style="border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;">
             <div class="section-header" style="background:#f3e5f5;color:#6f42c1;">
-                <i class="bi bi-check2-square me-1"></i>VII-E. KEPUTUSAN WALIKOTA BUKITTINGGI
+                <i class="bi bi-pen me-1"></i>VII-E. TANDA TANGAN WALIKOTA BUKITTINGGI
             </div>
             <div class="section-body">
                 @if($cuti->nama_walikota)
@@ -577,18 +582,14 @@
                     <tr>
                         <td>
                             @if($cuti->status_walikota === 'disetujui')
-                                <span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>{{ $cuti->isKepalaDinasApplicant() ? 'Ditandatangani' : 'Disetujui' }}</span>
-                            @elseif($cuti->status_walikota === 'tidak_disetujui')
-                                <span class="text-danger fw-bold"><i class="bi bi-x-circle me-1"></i>Tidak Disetujui</span>
+                                <span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>Ditandatangani</span>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
                         <td class="text-center">
-                            @if(in_array($cuti->status_walikota, ['disetujui']))
+                            @if($cuti->status_walikota === 'disetujui')
                                 <i class="bi bi-check-circle-fill" style="font-size:1.3rem;color:#198754;"></i>
-                            @elseif($cuti->status_walikota === 'tidak_disetujui')
-                                <i class="bi bi-x-circle-fill" style="font-size:1.3rem;color:#dc3545;"></i>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
@@ -607,7 +608,7 @@
                 </div>
                 @endif
                 @else
-                <div class="text-muted small"><i class="bi bi-clock me-1"></i>Menunggu {{ $cuti->isKepalaDinasApplicant() ? 'tanda tangan' : 'keputusan' }} Wali Kota Bukittinggi</div>
+                <div class="text-muted small"><i class="bi bi-clock me-1"></i>Menunggu tanda tangan Wali Kota Bukittinggi</div>
                 @endif
             </div>
         </div>
@@ -640,7 +641,11 @@
 
                         <div class="fw-bold mb-4" style="color:#6f42c1;">WALIKOTA BUKITTINGGI</div>
 
-                        <div style="border-top:2px solid #333;display:inline-block;width:280px;margin-bottom:4px;"></div>
+                        @if($cuti->tanda_tangan_walikota)
+                            <div class="mb-2"><img src="{{ asset('storage/' . $cuti->tanda_tangan_walikota) }}" alt="Tanda Tangan Wali Kota" style="max-width:180px;"></div>
+                        @else
+                            <div style="border-top:2px solid #333;display:inline-block;width:280px;margin-bottom:4px;"></div>
+                        @endif
                         <div class="fw-semibold">{{ $cuti->nama_walikota }}</div>
                         <div class="small">NIP. {{ $cuti->nip_walikota ?? '-' }}</div>
                     </div>

@@ -130,18 +130,9 @@
                             </a>
                         @endif
                         @if(auth()->user()->isWalikota() && $p->status === 'diproses_walikota')
-                            @if($p->isKepalaDinasApplicant())
                             <a href="{{ route('cuti.walikota.form', $p) }}" class="btn btn-sm rounded-pill px-3" style="background:#6f42c1;color:#fff;">
                                 <i class="bi bi-pen me-1"></i>Tanda Tangan
                             </a>
-                            @else
-                            <a href="{{ route('cuti.walikota.form', $p) }}?status=setuju" class="btn btn-sm btn-approve rounded-pill px-3" style="background:#6f42c1;">
-                                <i class="bi bi-check-circle me-1"></i>Setujui
-                            </a>
-                            <a href="{{ route('cuti.walikota.form', $p) }}?status=tolak" class="btn btn-sm btn-reject rounded-pill px-3">
-                                <i class="bi bi-x-circle me-1"></i>Tolak
-                            </a>
-                            @endif
                         @endif
                     </td>
                 </tr>

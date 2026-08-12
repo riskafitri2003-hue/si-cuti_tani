@@ -35,7 +35,7 @@
 @if($cuti->needsWalikota())
 <div class="card mb-3" style="background:#fff3e0;border:1px solid #ffcc80;">
     <div class="card-body py-3">
-        <small class="text-muted"><i class="bi bi-info-circle me-1"></i><strong>Alur Khusus:</strong> Setelah Kepala Dinas menandatangani, pengajuan ini akan diteruskan ke Wali Kota untuk persetujuan akhir.</small>
+        <small class="text-muted"><i class="bi bi-info-circle me-1"></i><strong>Alur Khusus:</strong> Setelah Kepala Dinas menandatangani, pengajuan ini akan diteruskan ke Wali Kota untuk tanda tangan akhir.</small>
     </div>
 </div>
 @endif

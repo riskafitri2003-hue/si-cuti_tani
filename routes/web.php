@@ -59,7 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cuti/{cuti}/saran', [PengajuanCutiController::class, 'storeSaran'])->name('cuti.saran.store');
 
     // Approval Atasan Langsung
-    Route::middleware('role:atasan_langsung,sekretaris,kepala_dinas,sekda,walikota')->group(function () {
+    Route::middleware('role:atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota')->group(function () {
         Route::get('/cuti/{cuti}/atasan-langsung', [PengajuanCutiController::class, 'approveAtasanLangsungForm'])->name('cuti.atasan-langsung.form');
         Route::post('/cuti/{cuti}/atasan-langsung', [PengajuanCutiController::class, 'approveAtasanLangsung'])->name('cuti.atasan-langsung.store');
     });

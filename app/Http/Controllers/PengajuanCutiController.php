@@ -22,20 +22,27 @@ class PengajuanCutiController extends Controller
 
         $query = PengajuanCuti::with(['pegawai', 'jenisCuti']);
 
+        $stageMap = [
+            'kasubag' => 'diproses_kasubag',
+            'sekretaris' => 'diproses_sekretaris',
+            'kepala_dinas' => 'diproses_kepala_dinas',
+            'sekda' => 'diproses_sekda',
+            'walikota' => 'diproses_walikota',
+        ];
+
         if ($user->isPegawai()) {
             $query->where('nip', $user->nip);
         } elseif ($user->isAtasanLangsung()) {
             $query->where('status', 'diajukan');
-        } elseif ($user->isKasubag()) {
-            $query->where('status', 'diproses_kasubag');
-        } elseif ($user->isSekretaris()) {
-            $query->where('status', 'diproses_sekretaris');
-        } elseif ($user->isKepalaDinas()) {
-            $query->where('status', 'diproses_kepala_dinas');
-        } elseif ($user->isSekda()) {
-            $query->where('status', 'diproses_sekda');
-        } elseif ($user->isWalikota()) {
-            $query->where('status', 'diproses_walikota');
+        } elseif (isset($stageMap[$user->role])) {
+            // Approver melihat cuti di tahapnya, atau cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+            $query->where(function ($q) use ($user, $stageMap) {
+                $q->where('status', $stageMap[$user->role])
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->where('status', 'diajukan')
+                            ->where('atasan_langsung_user_id', $user->user_id);
+                    });
+            });
         }
 
         $pengajuanCutis = $query->latest()->paginate(10);
@@ -47,7 +54,7 @@ class PengajuanCutiController extends Controller
     {
         $user = Auth::user();
         $jenisCutis = JenisCuti::orderBy('kode')->get();
-        $atasanLangsungs = \App\Models\User::whereIn('role', ['atasan_langsung', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota'])
+        $atasanLangsungs = \App\Models\User::whereIn('role', ['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota'])
             ->orderBy('nama')->get();
 
         $pegawais = $user->isAdmin() ? Pegawai::with('saldoCutis')->orderBy('nama')->get() : collect();
@@ -409,7 +416,7 @@ class PengajuanCutiController extends Controller
         $this->kirimNotifikasiWa($cuti, 'Kepala Dinas');
 
         $pesan = $cuti->status === 'diproses_walikota'
-            ? 'Tanda tangan Kepala Dinas tersimpan. Menunggu persetujuan Wali Kota.'
+            ? 'Tanda tangan Kepala Dinas tersimpan. Menunggu tanda tangan Wali Kota.'
             : 'Keputusan Kepala Dinas tersimpan.';
 
         return redirect()->route('cuti.index')->with('success', $pesan);
@@ -458,67 +465,43 @@ class PengajuanCutiController extends Controller
     }
 
     /**
-     * Approval Wali Kota (khusus cuti besar/haji/umroh & tanda tangan pengaju Kepala Dinas)
+     * Tanda tangan Wali Kota (tanpa persetujuan setuju/tolak)
      */
     public function approveWalikotaForm(PengajuanCuti $cuti)
     {
         abort_if($cuti->status !== 'diproses_walikota', 403);
 
-        $isKepalaDinas = $cuti->isKepalaDinasApplicant();
-
-        return view('cuti.approve_walikota', compact('cuti', 'isKepalaDinas'));
+        return view('cuti.approve_walikota', compact('cuti'));
     }
 
     public function approveWalikota(Request $request, PengajuanCuti $cuti)
     {
         abort_if($cuti->status !== 'diproses_walikota', 403);
 
-        $isKepalaDinas = $cuti->isKepalaDinasApplicant();
+        $data = $request->validate([
+            'nama_walikota' => ['required', 'string', 'max:255'],
+            'nip_walikota' => ['nullable', 'string', 'max:50'],
+            'tanda_tangan_data' => ['required', 'string'],
+        ]);
 
-        if ($isKepalaDinas) {
-            $data = $request->validate([
-                'nama_walikota' => ['required', 'string', 'max:255'],
-                'nip_walikota' => ['nullable', 'string', 'max:50'],
-                'tanda_tangan_data' => ['required', 'string'],
-            ]);
+        $base64 = $request->input('tanda_tangan_data');
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+        $filename = 'ttd_wk_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
+        Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
 
-            $base64 = $request->input('tanda_tangan_data');
-            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
-            $filename = 'ttd_wk_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
-            Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
-
-            $data['tanggal_walikota'] = now();
-            $data['status_walikota'] = 'disetujui';
-            $data['tanda_tangan_walikota'] = 'tanda_tangan/' . $filename;
-            $data['status'] = 'disetujui';
-
-            $cuti->update($data);
-        } else {
-            $data = $request->validate([
-                'status_walikota' => ['required', 'in:disetujui,tidak_disetujui'],
-                'catatan_walikota' => ['nullable', 'string'],
-                'nama_walikota' => ['required', 'string', 'max:255'],
-                'nip_walikota' => ['nullable', 'string', 'max:50'],
-            ]);
-
-            $data['tanggal_walikota'] = now();
-            $data['status'] = $data['status_walikota'] === 'tidak_disetujui' ? 'ditolak' : 'disetujui';
-
-            $cuti->update($data);
-        }
-
-        if ($cuti->status === 'ditolak') {
-            SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n', $cuti->lama_cuti_hari);
-        }
+        $cuti->update([
+            'nama_walikota' => $data['nama_walikota'],
+            'nip_walikota' => $data['nip_walikota'],
+            'tanggal_walikota' => now(),
+            'status_walikota' => 'disetujui',
+            'tanda_tangan_walikota' => 'tanda_tangan/' . $filename,
+            'status' => 'disetujui',
+        ]);
 
         $this->kirimNotifikasi($cuti, 'Wali Kota');
         $this->kirimNotifikasiWa($cuti, 'Wali Kota');
 
-        $pesan = $isKepalaDinas
-            ? 'Tanda tangan Wali Kota tersimpan. Cuti disetujui.'
-            : 'Keputusan Wali Kota tersimpan.';
-
-        return redirect()->route('cuti.index')->with('success', $pesan);
+        return redirect()->route('cuti.index')->with('success', 'Tanda tangan Wali Kota tersimpan. Cuti disetujui.');
     }
 
     /**

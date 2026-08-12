@@ -131,7 +131,7 @@
         @elseif(auth()->user()->isKepalaDinas())
             Pengajuan Menunggu Keputusan Kepala Dinas
         @elseif(auth()->user()->isWalikota())
-            Pengajuan Menunggu Keputusan Wali Kota
+            Pengajuan Menunggu Tanda Tangan Wali Kota
         @else
             Pengajuan Terbaru
         @endif
