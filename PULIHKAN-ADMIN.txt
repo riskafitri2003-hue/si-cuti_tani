@@ -1,0 +1,61 @@
+========================================================
+  PULIHKAN AKSES ADMIN APLIKASI CUTI
+  (dibuat untuk diserahkan ke pihak yang pegang akses hosting/server)
+========================================================
+
+MASALAH
+  Akun admin (baris di tabel `users`) terhapus dari database hosting,
+  sehingga halaman admin tidak bisa diakses lagi.
+
+SOLUSI
+  Buat ulang baris akun admin di tabel `users` di database server.
+  Cukup pilih SATU dari 3 opsi di bawah.
+
+  Hasil akhir login:
+    NIP      : admin
+    Password : passwordBaru123
+    Role     : admin
+
+--------------------------------------------------------
+  OPSI A - SSH / Terminal Server (paling mudah)
+--------------------------------------------------------
+Masuk ke folder aplikasi di server, lalu jalankan:
+
+  php artisan tinker --execute="\App\Models\User::updateOrCreate(['nip' => 'admin'], ['nama' => 'Administrator', 'password' => 'passwordBaru123', 'role' => 'admin']);"
+
+  php artisan admin:reset --password=passwordBaru123
+
+    (perintah kedua sama saja hasilnya, tapi lebih sederhana.
+     Pastikan kode aplikasi sudah yang terbaru karena command
+     `admin:reset` ditambahkan untuk keperluan ini)
+
+--------------------------------------------------------
+  OPSI B - phpMyAdmin (jalankan sebagai SQL)
+--------------------------------------------------------
+1. Buka phpMyAdmin, pilih database aplikasi, buka tabel `users`.
+2. Buka tab "SQL" dan jalankan:
+
+  INSERT INTO users (nama, nip, password, role, created_at, updated_at)
+  VALUES ('Administrator', 'admin', '$2y$10$c3n9qFsOUCxpYAeyCt4E5epTmdQ2llJO8xUNIzQHsuhQOx0Pk2g6m', 'admin', NOW(), NOW());
+
+   Catatan:
+   - String '$2y$10$...' adalah hash bcrypt dari password `passwordBaru123`
+     (jangan diganti, itu bukan password polos).
+   - Kolom `user_id` (primary key) dibiarkan otomatis.
+   - Jika kolom di server berbeda (misal masih `name` bukan `nama`),
+     sesuaikan nama kolomnya.
+
+--------------------------------------------------------
+  OPSI C - Restore Backup Database
+--------------------------------------------------------
+Restore backup database yang diambil SEBELUM akun admin terhapus
+(dari hosting/cPanel). Paling aman karena semua data ikut kembali.
+
+--------------------------------------------------------
+  SETELAH BERHASIL LOGIN
+--------------------------------------------------------
+1. Login dengan NIP `admin`, password `passwordBaru123`.
+2. Segera ganti password lewat menu Ganti Password di aplikasi.
+3. Buat akun admin cadangan lewat menu Kelola Akun agar kejadian
+   serupa tidak mengunci akses lagi.
+4. Rutin backup database hosting.
