@@ -63,7 +63,7 @@
                     <td>
                         @if($pegawai->user)
                             <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle me-1"></i>Ada</span>
-                            <small class="text-muted d-block small">{{ optional($pegawai->user)->role }}</small>
+                            <small class="text-muted d-block small">{{ $pegawai->user->roleNames() }}</small>
                         @else
                             <span class="badge bg-secondary rounded-pill"><i class="bi bi-x-circle me-1"></i>Belum</span>
                         @endif

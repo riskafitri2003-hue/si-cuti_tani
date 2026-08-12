@@ -63,17 +63,16 @@
                         <input type="password" name="password_confirmation" class="form-control" placeholder="Ulangi password">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Role / Level</label>
-                        <select name="role" class="form-select">
-                            <option value="pegawai">Pegawai</option>
-                            <option value="atasan_langsung">Atasan Langsung</option>
-                            <option value="kasubag">Kasubag Umum</option>
-                            <option value="sekretaris">Sekretaris</option>
-                            <option value="kepala_dinas">Kepala Dinas</option>
-                            <option value="sekda">Sekretaris Daerah</option>
-                            <option value="walikota">Walikota</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <label class="form-label">Role / Level <span class="text-muted fw-normal">(bisa lebih dari satu)</span></label>
+                        <div class="border rounded p-2 bg-white" style="max-height:180px;overflow:auto;">
+                            @foreach(\App\Models\User::ROLE_LABELS as $val => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="role[]" value="{{ $val }}" id="role-create-{{ $val }}">
+                                <label class="form-check-label small" for="role-create-{{ $val }}">{{ $label }}</label>
+                            </div>
+                            @endforeach
+                        </div>
+                        <div class="form-text">Kosongkan jika hanya data pegawai tanpa akun.</div>
                     </div>
                 </div>
             </div>

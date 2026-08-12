@@ -14,26 +14,30 @@ class DashboardController extends Controller
 
         $query = PengajuanCuti::with(['pegawai', 'jenisCuti']);
 
-        $stageMap = [
-            'kasubag' => 'diproses_kasubag',
-            'sekretaris' => 'diproses_sekretaris',
-            'kepala_dinas' => 'diproses_kepala_dinas',
-            'sekda' => 'diproses_sekda',
-            'walikota' => 'diproses_walikota',
-        ];
-
         if ($user->isPegawai()) {
             $query->where('nip', $user->nip);
-        } elseif ($user->isAtasanLangsung()) {
-            $query->where('status', 'diajukan');
-        } elseif (isset($stageMap[$user->role])) {
-            // Approver melihat cuti di tahapnya, atau cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+        } elseif (! $user->isAdmin()) {
+            $stageMap = [
+                'atasan_langsung' => 'diajukan',
+                'kasubag' => 'diproses_kasubag',
+                'sekretaris' => 'diproses_sekretaris',
+                'kepala_dinas' => 'diproses_kepala_dinas',
+                'sekda' => 'diproses_sekda',
+                'walikota' => 'diproses_walikota',
+            ];
+
             $query->where(function ($q) use ($user, $stageMap) {
-                $q->where('status', $stageMap[$user->role])
-                    ->orWhere(function ($q2) use ($user) {
-                        $q2->where('status', 'diajukan')
-                            ->where('atasan_langsung_user_id', $user->user_id);
-                    });
+                foreach ($stageMap as $role => $status) {
+                    if ($user->hasRole($role)) {
+                        $q->orWhere('status', $status);
+                    }
+                }
+
+                // Cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+                $q->orWhere(function ($q2) use ($user) {
+                    $q2->where('status', 'diajukan')
+                        ->where('atasan_langsung_user_id', $user->user_id);
+                });
             });
         }
 

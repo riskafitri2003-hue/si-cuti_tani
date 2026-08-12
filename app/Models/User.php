@@ -51,63 +51,106 @@ class User extends Authenticatable
         ];
     }
 
+    public const ROLE_LABELS = [
+        'admin' => 'Admin',
+        'pegawai' => 'Pegawai',
+        'atasan_langsung' => 'Atasan Langsung',
+        'kasubag' => 'Kasubag Umum',
+        'sekretaris' => 'Sekretaris',
+        'kepala_dinas' => 'Kepala Dinas',
+        'sekda' => 'Sekretaris Daerah',
+        'walikota' => 'Wali Kota',
+    ];
+
     public function pegawai()
     {
         return $this->belongsTo(Pegawai::class, 'nip', 'nip');
     }
 
+    /**
+     * Daftar role yang dimiliki (role disimpan CSV, contoh: atasan_langsung,kasubag).
+     */
+    public function roleList(): array
+    {
+        if (! $this->role) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $this->role))));
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roleList(), true);
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return ! empty(array_intersect($roles, $this->roleList()));
+    }
+
+    public function roleNames(): string
+    {
+        $labels = $this->roleList();
+        if (empty($labels)) {
+            return '-';
+        }
+
+        return implode(', ', array_map(fn ($r) => self::ROLE_LABELS[$r] ?? ucwords(str_replace('_', ' ', $r)), $labels));
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin');
     }
 
     public function isPegawai(): bool
     {
-        return $this->role === 'pegawai';
+        return $this->hasRole('pegawai');
     }
 
     public function isAtasan(): bool
     {
-        return $this->role === 'atasan';
+        return $this->hasRole('atasan');
     }
 
     public function isPejabat(): bool
     {
-        return $this->role === 'pejabat';
+        return $this->hasRole('pejabat');
     }
 
     public function isAtasanLangsung(): bool
     {
-        return $this->role === 'atasan_langsung';
+        return $this->hasRole('atasan_langsung');
     }
 
     public function isKasubag(): bool
     {
-        return $this->role === 'kasubag';
+        return $this->hasRole('kasubag');
     }
 
     public function isSekretaris(): bool
     {
-        return $this->role === 'sekretaris';
+        return $this->hasRole('sekretaris');
     }
 
     public function isKepalaDinas(): bool
     {
-        return $this->role === 'kepala_dinas';
+        return $this->hasRole('kepala_dinas');
     }
 
     public function isWalikota(): bool
     {
-        return $this->role === 'walikota';
+        return $this->hasRole('walikota');
     }
 
     public function isSekda(): bool
     {
-        return $this->role === 'sekda';
+        return $this->hasRole('sekda');
     }
 
     public function canBeAtasanLangsung(): bool
     {
-        return in_array($this->role, ['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota']);
+        return $this->hasAnyRole(['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota']);
     }
 }

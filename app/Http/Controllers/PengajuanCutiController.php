@@ -22,26 +22,30 @@ class PengajuanCutiController extends Controller
 
         $query = PengajuanCuti::with(['pegawai', 'jenisCuti']);
 
-        $stageMap = [
-            'kasubag' => 'diproses_kasubag',
-            'sekretaris' => 'diproses_sekretaris',
-            'kepala_dinas' => 'diproses_kepala_dinas',
-            'sekda' => 'diproses_sekda',
-            'walikota' => 'diproses_walikota',
-        ];
-
         if ($user->isPegawai()) {
             $query->where('nip', $user->nip);
-        } elseif ($user->isAtasanLangsung()) {
-            $query->where('status', 'diajukan');
-        } elseif (isset($stageMap[$user->role])) {
-            // Approver melihat cuti di tahapnya, atau cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+        } elseif (! $user->isAdmin()) {
+            $stageMap = [
+                'atasan_langsung' => 'diajukan',
+                'kasubag' => 'diproses_kasubag',
+                'sekretaris' => 'diproses_sekretaris',
+                'kepala_dinas' => 'diproses_kepala_dinas',
+                'sekda' => 'diproses_sekda',
+                'walikota' => 'diproses_walikota',
+            ];
+
             $query->where(function ($q) use ($user, $stageMap) {
-                $q->where('status', $stageMap[$user->role])
-                    ->orWhere(function ($q2) use ($user) {
-                        $q2->where('status', 'diajukan')
-                            ->where('atasan_langsung_user_id', $user->user_id);
-                    });
+                foreach ($stageMap as $role => $status) {
+                    if ($user->hasRole($role)) {
+                        $q->orWhere('status', $status);
+                    }
+                }
+
+                // Cuti diajukan yang menunggu tanda tangannya sebagai atasan langsung
+                $q->orWhere(function ($q2) use ($user) {
+                    $q2->where('status', 'diajukan')
+                        ->where('atasan_langsung_user_id', $user->user_id);
+                });
             });
         }
 
@@ -54,8 +58,11 @@ class PengajuanCutiController extends Controller
     {
         $user = Auth::user();
         $jenisCutis = JenisCuti::orderBy('kode')->get();
-        $atasanLangsungs = \App\Models\User::whereIn('role', ['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota'])
-            ->orderBy('nama')->get();
+        $atasanLangsungs = \App\Models\User::where(function ($q) {
+            foreach (['atasan_langsung', 'kasubag', 'sekretaris', 'kepala_dinas', 'sekda', 'walikota'] as $role) {
+                $q->orWhereRaw('FIND_IN_SET(?, role)', [$role]);
+            }
+        })->orderBy('nama')->get();
 
         $pegawais = $user->isAdmin() ? Pegawai::with('saldoCutis')->orderBy('nama')->get() : collect();
 
@@ -69,7 +76,7 @@ class PengajuanCutiController extends Controller
         $user = Auth::user();
 
         $pegawaiNip = $user->isAdmin() ? $request->input('nip') : $user->nip;
-        $isKepalaDinasApplicant = \App\Models\User::where('nip', $pegawaiNip)->value('role') === 'kepala_dinas';
+        $isKepalaDinasApplicant = (bool) optional(\App\Models\User::where('nip', $pegawaiNip)->first())->isKepalaDinas();
 
         $rules = [
             'kode_jenis_cuti' => ['required', 'exists:jenis_cutis,kode'],
@@ -205,6 +212,28 @@ class PengajuanCutiController extends Controller
         $filename = basename($cuti->dokumen_pendukung);
 
         return response()->download($path, $filename);
+    }
+
+    /**
+     * Hapus pengajuan cuti (koreksi data) - hanya admin.
+     */
+    public function destroy(PengajuanCuti $cuti)
+    {
+        abort_if(! auth()->user()->isAdmin(), 403);
+
+        if ($cuti->status !== 'ditolak') {
+            SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n', $cuti->lama_cuti_hari);
+        }
+
+        foreach (['dokumen_pendukung', 'tanda_tangan_pegawai', 'tanda_tangan_atasan_langsung', 'tanda_tangan_kepala_dinas', 'tanda_tangan_sekda', 'tanda_tangan_walikota'] as $field) {
+            if ($cuti->{$field}) {
+                Storage::disk('public')->delete($cuti->{$field});
+            }
+        }
+
+        $cuti->delete();
+
+        return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dihapus. Saldo cuti telah dikembalikan.');
     }
 
     /**
@@ -604,7 +633,7 @@ class PengajuanCutiController extends Controller
 
         if (! $role) return null;
 
-        return User::where('role', $role)->with('pegawai')->first();
+        return User::whereRaw('FIND_IN_SET(?, role)', [$role])->with('pegawai')->first();
     }
 
     /**

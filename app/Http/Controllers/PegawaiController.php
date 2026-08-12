@@ -58,7 +58,7 @@ class PegawaiController extends Controller
                 'nama' => $data['nama'],
                 'nip' => $pegawai->nip,
                 'password' => $request->password,
-                'role' => $request->role ?? 'pegawai',
+                'role' => $request->filled('role') ? implode(',', (array) $request->role) : 'pegawai',
             ]);
         }
 
@@ -82,14 +82,15 @@ class PegawaiController extends Controller
 
         $data = $request->validate([
             'password' => ['required', 'string', 'min:3', 'confirmed'],
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
+            'role' => ['required', 'array', 'min:1'],
+            'role.*' => ['string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
         ]);
 
         User::create([
             'nama' => $pegawai->nama,
             'nip' => $pegawai->nip,
             'password' => $data['password'],
-            'role' => $data['role'],
+            'role' => implode(',', $data['role']),
         ]);
 
         return redirect()->route('pegawai.index')->with('success', 'Akun berhasil dibuat untuk ' . $pegawai->nama . '.');
@@ -202,14 +203,15 @@ class PegawaiController extends Controller
 
         $data = $request->validate([
             'password' => ['required', 'string', 'min:3', 'confirmed'],
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
+            'role' => ['required', 'array', 'min:1'],
+            'role.*' => ['string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
         ]);
 
         User::create([
             'nama' => $pegawai->nama,
             'nip' => $pegawai->nip,
             'password' => $data['password'],
-            'role' => $data['role'],
+            'role' => implode(',', $data['role']),
         ]);
 
         return redirect()->route('pegawai.kelola-akun')->with('success', 'Akun berhasil dibuat untuk ' . $pegawai->nama . '.');
@@ -222,11 +224,12 @@ class PegawaiController extends Controller
         }
 
         $data = $request->validate([
-            'role' => ['required', 'string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
+            'role' => ['required', 'array', 'min:1'],
+            'role.*' => ['string', 'in:pegawai,admin,atasan_langsung,kasubag,sekretaris,kepala_dinas,sekda,walikota'],
             'password' => ['nullable', 'string', 'min:3'],
         ]);
 
-        $updateData = ['role' => $data['role']];
+        $updateData = ['role' => implode(',', $data['role'])];
 
         if (! empty($data['password'])) {
             $updateData['password'] = $data['password'];

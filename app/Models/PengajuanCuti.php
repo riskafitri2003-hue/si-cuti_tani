@@ -69,7 +69,7 @@ class PengajuanCuti extends Model
 
     public function isKepalaDinasApplicant(): bool
     {
-        return optional($this->pegawai?->user)->role === 'kepala_dinas';
+        return (bool) optional($this->pegawai?->user)->isKepalaDinas();
     }
 
     public function isAlurKepalaDinas(): bool

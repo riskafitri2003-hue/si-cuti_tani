@@ -33,6 +33,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/kelola-akun/{pegawai}/store', [PegawaiController::class, 'akunStore'])->name('pegawai.akun.store');
         Route::put('/kelola-akun/{pegawai}/update', [PegawaiController::class, 'akunUpdate'])->name('pegawai.akun.update');
         Route::delete('/kelola-akun/{pegawai}/destroy', [PegawaiController::class, 'akunDestroy'])->name('pegawai.akun.destroy');
+
+        // Hapus pengajuan cuti (koreksi data)
+        Route::delete('/cuti/{cuti}', [PengajuanCutiController::class, 'destroy'])->name('cuti.destroy');
     });
 
     // Laporan - hanya admin

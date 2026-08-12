@@ -8,7 +8,7 @@
     </div>
     <div>
         <h4 class="mb-0" style="color:#1a237e;">Selamat datang, {{ auth()->user()->nama }}</h4>
-        <small class="text-muted">Role: <span class="badge bg-primary bg-opacity-10 text-primary">{{ auth()->user()->role }}</span></small>
+        <small class="text-muted">Role: <span class="badge bg-primary bg-opacity-10 text-primary">{{ auth()->user()->roleNames() }}</span></small>
     </div>
 </div>
 

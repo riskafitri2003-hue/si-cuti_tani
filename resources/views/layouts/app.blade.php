@@ -296,7 +296,7 @@
                 <span class="user-avatar">{{ strtoupper(substr(auth()->user()->nama, 0, 1)) }}</span>
                 <span style="min-width:0;">
                     <div class="text-white text-truncate">{{ auth()->user()->nama }}</div>
-                    <div class="text-white-50 small text-truncate">{{ auth()->user()->role }}</div>
+                    <div class="text-white-50 small text-truncate">{{ auth()->user()->roleNames() }}</div>
                 </span>
             </div>
             <form action="{{ route('logout') }}" method="POST">
@@ -368,7 +368,7 @@
                 <span class="user-avatar">{{ strtoupper(substr(auth()->user()->nama, 0, 1)) }}</span>
                 <span style="min-width:0;">
                     <div class="text-white text-truncate">{{ auth()->user()->nama }}</div>
-                    <div class="text-white-50 small text-truncate">{{ auth()->user()->role }}</div>
+                    <div class="text-white-50 small text-truncate">{{ auth()->user()->roleNames() }}</div>
                 </span>
             </div>
             <form action="{{ route('logout') }}" method="POST">

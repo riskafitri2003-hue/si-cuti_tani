@@ -12,7 +12,7 @@
             <div class="card-body">
                 <div class="mb-3 small text-muted">
                     <i class="bi bi-person-circle me-1"></i>
-                    {{ auth()->user()->nama }} ({{ auth()->user()->role }})
+                    {{ auth()->user()->nama }} ({{ auth()->user()->roleNames() }})
                 </div>
                 <form method="POST" action="{{ route('password.change.update') }}">
                     @csrf

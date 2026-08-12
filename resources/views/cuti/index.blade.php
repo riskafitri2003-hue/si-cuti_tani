@@ -134,6 +134,15 @@
                                 <i class="bi bi-pen me-1"></i>Tanda Tangan
                             </a>
                         @endif
+                        @if(auth()->user()->isAdmin())
+                            <form action="{{ route('cuti.destroy', $p) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Hapus pengajuan cuti ini? Saldo cuti pegawai akan dikembalikan.')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
                 @empty

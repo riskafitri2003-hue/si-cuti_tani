@@ -42,6 +42,15 @@
                 <i class="bi bi-whatsapp me-1"></i>Kirim WA
             </a>
         @endif
+        @if(auth()->user()->isAdmin())
+            <form action="{{ route('cuti.destroy', $cuti) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Hapus pengajuan cuti ini? Saldo cuti pegawai akan dikembalikan.')">
+                @csrf @method('DELETE')
+                <button class="btn btn-danger btn-sm rounded-pill px-3">
+                    <i class="bi bi-trash me-1"></i>Hapus
+                </button>
+            </form>
+        @endif
         <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-3">
             <i class="bi bi-printer me-1"></i>Cetak
         </button>

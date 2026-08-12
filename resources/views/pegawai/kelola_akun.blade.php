@@ -37,7 +37,11 @@
                     <td>{{ $pegawai->unit_kerja ?? '-' }}</td>
                     <td>
                         @if($pegawai->user)
-                            <span class="badge bg-primary rounded-pill">{{ $pegawai->user->role }}</span>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach($pegawai->user->roleList() as $r)
+                                    <span class="badge bg-primary rounded-pill">{{ \App\Models\User::ROLE_LABELS[$r] ?? $r }}</span>
+                                @endforeach
+                            </div>
                         @else
                             <span class="text-muted">-</span>
                         @endif
@@ -107,17 +111,15 @@
                         <input type="password" name="password_confirmation" class="form-control" required placeholder="Ulangi password">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select name="role" class="form-select" required>
-                            <option value="pegawai">Pegawai</option>
-                            <option value="atasan_langsung">Atasan Langsung</option>
-                            <option value="kasubag">Kasubag Umum</option>
-                            <option value="sekretaris">Sekretaris</option>
-                            <option value="kepala_dinas">Kepala Dinas</option>
-                            <option value="sekda">Sekretaris Daerah</option>
-                            <option value="walikota">Walikota</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <label class="form-label">Role <span class="text-danger">*</span> <span class="text-muted fw-normal">(bisa lebih dari satu)</span></label>
+                        <div class="border rounded p-2 bg-white" style="max-height:180px;overflow:auto;">
+                            @foreach(\App\Models\User::ROLE_LABELS as $val => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="role[]" value="{{ $val }}" id="role-create-{{ $pegawai->nip }}-{{ $val }}">
+                                <label class="form-check-label small" for="role-create-{{ $pegawai->nip }}-{{ $val }}">{{ $label }}</label>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -144,20 +146,22 @@
                     <div class="mb-3 p-3 bg-light rounded">
                         <div class="small"><strong>{{ $pegawai->user->nama }}</strong></div>
                         <div class="small text-muted">NIP: {{ $pegawai->nip }}</div>
-                        <div class="small text-muted">Role saat ini: <span class="badge bg-primary">{{ $pegawai->user->role }}</span></div>
+                        <div class="small text-muted">Role saat ini:
+                            @foreach($pegawai->user->roleList() as $r)
+                                <span class="badge bg-primary">{{ \App\Models\User::ROLE_LABELS[$r] ?? $r }}</span>
+                            @endforeach
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Ubah Role <span class="text-danger">*</span></label>
-                        <select name="role" class="form-select" required>
-                            <option value="pegawai" {{ $pegawai->user->role === 'pegawai' ? 'selected' : '' }}>Pegawai</option>
-                            <option value="atasan_langsung" {{ $pegawai->user->role === 'atasan_langsung' ? 'selected' : '' }}>Atasan Langsung</option>
-                            <option value="kasubag" {{ $pegawai->user->role === 'kasubag' ? 'selected' : '' }}>Kasubag Umum</option>
-                            <option value="sekretaris" {{ $pegawai->user->role === 'sekretaris' ? 'selected' : '' }}>Sekretaris</option>
-                            <option value="kepala_dinas" {{ $pegawai->user->role === 'kepala_dinas' ? 'selected' : '' }}>Kepala Dinas</option>
-                            <option value="sekda" {{ $pegawai->user->role === 'sekda' ? 'selected' : '' }}>Sekretaris Daerah</option>
-                            <option value="walikota" {{ $pegawai->user->role === 'walikota' ? 'selected' : '' }}>Walikota</option>
-                            <option value="admin" {{ $pegawai->user->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                        </select>
+                        <label class="form-label">Ubah Role <span class="text-danger">*</span> <span class="text-muted fw-normal">(bisa lebih dari satu)</span></label>
+                        <div class="border rounded p-2 bg-white" style="max-height:180px;overflow:auto;">
+                            @foreach(\App\Models\User::ROLE_LABELS as $val => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="role[]" value="{{ $val }}" id="role-edit-{{ $pegawai->nip }}-{{ $val }}" @if(in_array($val, $pegawai->user->roleList())) checked @endif>
+                                <label class="form-check-label small" for="role-edit-{{ $pegawai->nip }}-{{ $val }}">{{ $label }}</label>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password Baru <span class="text-muted fw-normal">(kosongkan jika tidak diubah)</span></label>
