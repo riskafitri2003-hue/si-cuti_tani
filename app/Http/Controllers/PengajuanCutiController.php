@@ -251,7 +251,19 @@ class PengajuanCutiController extends Controller
             'catatan_atasan_langsung' => ['nullable', 'string'],
             'nama_atasan_langsung' => ['required', 'string', 'max:255'],
             'nip_atasan_langsung' => ['nullable', 'string', 'max:50'],
+            'tanda_tangan_data' => $request->input('status_atasan_langsung') === 'disetujui'
+                ? ['required', 'string']
+                : ['nullable', 'string'],
         ]);
+
+        // Simpan tanda tangan
+        if ($request->filled('tanda_tangan_data')) {
+            $base64 = $request->input('tanda_tangan_data');
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+            $filename = 'ttd_al_' . $cuti->pengajuan_cuti_id . '_' . time() . '.png';
+            Storage::disk('public')->put('tanda_tangan/' . $filename, $imageData);
+            $data['tanda_tangan_atasan_langsung'] = 'tanda_tangan/' . $filename;
+        }
 
         $data['tanggal_atasan_langsung'] = now();
         $data['status'] = $data['status_atasan_langsung'] === 'tidak_disetujui' ? 'ditolak' : 'diproses_kasubag';
@@ -360,7 +372,9 @@ class PengajuanCutiController extends Controller
             'nama_kepala_dinas' => ['required', 'string', 'max:255'],
             'nip_kepala_dinas' => ['nullable', 'string', 'max:50'],
             'nomor_surat' => ['nullable', 'string', 'max:100'],
-            'tanda_tangan_data' => ['nullable', 'string'],
+            'tanda_tangan_data' => $request->input('status_kepala_dinas', 'disetujui') === 'disetujui'
+                ? ['required', 'string']
+                : ['nullable', 'string'],
         ];
 
         $data = $request->validate($rules);

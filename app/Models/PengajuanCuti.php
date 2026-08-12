@@ -19,6 +19,7 @@ class PengajuanCuti extends Model
         'atasan_langsung_disetujui_hari', 'atasan_langsung_perubahan_hari',
         'atasan_langsung_ditangguhkan_hari', 'atasan_langsung_tidak_disetujui_hari',
         'nama_atasan_langsung', 'nip_atasan_langsung', 'tanggal_atasan_langsung', 'catatan_atasan_langsung', 'status_atasan_langsung',
+        'tanda_tangan_atasan_langsung',
 
         // Kasubag Umum
         'kasubag_disetujui_hari', 'kasubag_perubahan_hari',

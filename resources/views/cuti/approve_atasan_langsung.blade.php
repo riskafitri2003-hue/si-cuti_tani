@@ -65,9 +65,26 @@
                     <label class="form-label">NIP Atasan Langsung</label>
                     <input type="text" name="nip_atasan_langsung" class="form-control" placeholder="NIP" value="{{ auth()->user()->nip }}">
                 </div>
+
+                @if(!$isTolak)
+                {{-- TANDA TANGAN ATASAN LANGSUNG --}}
+                <div class="col-12">
+                    <label class="form-label fw-bold"><i class="bi bi-pen me-1"></i>Tanda Tangan Atasan Langsung</label>
+                    <div class="border rounded p-2 bg-white" style="max-width:400px;">
+                        <canvas id="signature-pad-al" width="380" height="200" style="width:100%;height:auto;cursor:crosshair;border:1px dashed #ccc;border-radius:6px;"></canvas>
+                    </div>
+                    <input type="hidden" name="tanda_tangan_data" id="tanda-tangan-data-al">
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearSignatureAL()">
+                            <i class="bi bi-eraser me-1"></i>Hapus Tanda Tangan
+                        </button>
+                    </div>
+                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Gambarkan tanda tangan Anda di area di atas.</p>
+                </div>
+                @endif
             </div>
             <div class="d-flex gap-2 mt-4">
-                <button class="btn rounded-pill px-4 {{ $isTolak ? 'btn-reject' : 'btn-approve' }}">
+                <button type="submit" class="btn rounded-pill px-4 {{ $isTolak ? 'btn-reject' : 'btn-approve' }}" onclick="saveSignatureAL()">
                     <i class="bi {{ $isTolak ? 'bi-x-circle' : 'bi-check-circle' }} me-1"></i>
                     {{ $isTolak ? 'Tolak' : 'Setujui' }}
                 </button>
@@ -76,4 +93,41 @@
         </form>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+var signaturePadAL;
+
+document.addEventListener('DOMContentLoaded', function() {
+    var canvas = document.getElementById('signature-pad-al');
+    if (!canvas) return;
+
+    signaturePadAL = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        penColor: '#000000'
+    });
+
+    function resizeCanvas() {
+        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(ratio, ratio);
+        signaturePadAL.clear();
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+});
+
+function clearSignatureAL() {
+    signaturePadAL.clear();
+    document.getElementById('tanda-tangan-data-al').value = '';
+}
+
+function saveSignatureAL() {
+    if (!signaturePadAL.isEmpty()) {
+        document.getElementById('tanda-tangan-data-al').value = signaturePadAL.toDataURL('image/png');
+    }
+}
+</script>
 @endsection
