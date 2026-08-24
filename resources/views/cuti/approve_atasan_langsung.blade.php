@@ -53,6 +53,26 @@
                     </div>
                 @endif
 
+                @if(!$isTolak)
+                <div class="col-12">
+                    <label class="form-label fw-bold">Rincian Hari</label>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small">Disetujui (hari)</label>
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="atasan_langsung_disetujui_hari" id="alSetujuHari" class="form-control" value="{{ $cuti->atasan_langsung_disetujui_hari ?? $cuti->lama_cuti_hari }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Ditangguhkan (hari) &mdash; otomatis</label>
+                            <input type="number" min="0" name="atasan_langsung_ditangguhkan_hari" id="alTangguhkanHari" class="form-control bg-light" value="{{ $cuti->atasan_langsung_ditangguhkan_hari ?? 0 }}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Tidak Disetujui (hari)</label>
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="atasan_langsung_tidak_disetujui_hari" id="alTolakHari" class="form-control" value="{{ $cuti->atasan_langsung_tidak_disetujui_hari ?? 0 }}">
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Ditangguhkan = {{ $cuti->lama_cuti_hari }} &minus; disetujui &minus; tidak disetujui (dihitung otomatis).</p>
+                </div>
+
                 <div class="col-12">
                     <label class="form-label">Catatan</label>
                     <textarea name="catatan_atasan_langsung" class="form-control" rows="2" placeholder="Catatan (opsional)"></textarea>
@@ -65,6 +85,10 @@
                     <label class="form-label">NIP Atasan Langsung</label>
                     <input type="text" name="nip_atasan_langsung" class="form-control" placeholder="NIP" value="{{ auth()->user()->nip }}">
                 </div>
+
+                @if($isTolak)
+                    <input type="hidden" name="atasan_langsung_tidak_disetujui_hari" value="{{ $cuti->lama_cuti_hari }}">
+                @endif
 
                 @if(!$isTolak)
                 {{-- TANDA TANGAN ATASAN LANGSUNG --}}
@@ -129,5 +153,34 @@ function saveSignatureAL() {
         document.getElementById('tanda-tangan-data-al').value = signaturePadAL.toDataURL('image/png');
     }
 }
+
+var lamaCutiAL = {{ $cuti->lama_cuti_hari }};
+
+function recalcAL() {
+    var sEl = document.getElementById('alSetujuHari');
+    var tEl = document.getElementById('alTolakHari');
+    var gEl = document.getElementById('alTangguhkanHari');
+    if (!sEl || !tEl || !gEl) return;
+    var s = parseInt(sEl.value, 10) || 0;
+    var t = parseInt(tEl.value, 10) || 0;
+    if (s + t > lamaCutiAL) {
+        if (document.activeElement === sEl) {
+            s = Math.max(lamaCutiAL - t, 0);
+            sEl.value = s;
+        } else {
+            t = Math.max(lamaCutiAL - s, 0);
+            tEl.value = t;
+        }
+    }
+    gEl.value = lamaCutiAL - s - t;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    ['alSetujuHari', 'alTolakHari'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', recalcAL);
+    });
+    recalcAL();
+});
 </script>
 @endsection

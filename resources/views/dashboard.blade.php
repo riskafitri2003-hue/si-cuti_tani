@@ -12,57 +12,55 @@
     </div>
 </div>
 
-{{-- SALDO CUTI (khusus pegawai) --}}
-@if(auth()->user()->isPegawai() && $saldoCutis->isNotEmpty())
-    @php $totalSisa = $saldoCutis->sum('saldo'); @endphp
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card stat-card border-0" style="border-left-color:#6f42c1;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon" style="background:#f3e5f5;color:#6f42c1;">
-                            <i class="bi bi-piggy-bank"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">Total Sisa Cuti</div>
-                            <div class="fs-3 fw-bold" style="color:#6f42c1;">{{ $totalSisa }} hari</div>
-                        </div>
+{{-- SALDO CUTI (semua akun) --}}
+@php
+    $s = $saldoCutis->first();
+    $totalSisa = ($s->saldo_n2 ?? 0) + ($s->saldo_n1 ?? 0) + ($s->saldo_n ?? 0);
+@endphp
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card border-0" style="border-left-color:#6f42c1;">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#f3e5f5;color:#6f42c1;">
+                        <i class="bi bi-piggy-bank"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Sisa Cuti</div>
+                        <div class="fs-3 fw-bold" style="color:#6f42c1;">{{ $totalSisa }} hari</div>
                     </div>
                 </div>
             </div>
         </div>
-        @php $s = $saldoCutis->first(); @endphp
-        @if($s)
-        <div class="col-md-2">
-            <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
-                <div class="card-body d-flex flex-column justify-content-center py-2">
-                    <div class="text-muted small fw-medium">N-2</div>
-                    <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n2 }}</div>
-                    <div class="small text-muted">hari</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
-                <div class="card-body d-flex flex-column justify-content-center py-2">
-                    <div class="text-muted small fw-medium">N-1</div>
-                    <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n1 }}</div>
-                    <div class="small text-muted">hari</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
-                <div class="card-body d-flex flex-column justify-content-center py-2">
-                    <div class="text-muted small fw-medium">N</div>
-                    <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n }}</div>
-                    <div class="small text-muted">hari</div>
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
-@endif
+    <div class="col-md-2">
+        <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
+            <div class="card-body d-flex flex-column justify-content-center py-2">
+                <div class="text-muted small fw-medium">N-2</div>
+                <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n2 ?? 0 }}</div>
+                <div class="small text-muted">hari</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
+            <div class="card-body d-flex flex-column justify-content-center py-2">
+                <div class="text-muted small fw-medium">N-1</div>
+                <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n1 ?? 0 }}</div>
+                <div class="small text-muted">hari</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card border-0 text-center h-100" style="border-left-color:#0d6efd;">
+            <div class="card-body d-flex flex-column justify-content-center py-2">
+                <div class="text-muted small fw-medium">N</div>
+                <div class="fs-4 fw-bold" style="color:#1a237e;">{{ $s->saldo_n ?? 0 }}</div>
+                <div class="small text-muted">hari</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">

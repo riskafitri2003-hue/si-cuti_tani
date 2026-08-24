@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     // Laporan - hanya admin
     Route::middleware('role:admin')->group(function () {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     });
 
     // Rekap saran/masukan - hanya admin

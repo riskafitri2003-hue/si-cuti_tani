@@ -10,7 +10,9 @@ class PengajuanCuti extends Model
 
     protected $fillable = [
         'nip', 'kode_jenis_cuti',
-        'alasan_cuti', 'lama_cuti_hari', 'tanggal_mulai', 'tanggal_selesai',
+        'alasan_cuti', 'lama_cuti_hari',
+        'potongan_saldo_n2', 'potongan_saldo_n1', 'potongan_saldo_n',
+        'tanggal_mulai', 'tanggal_selesai',
         'alamat_selama_cuti', 'telpon_selama_cuti', 'tanggal_pengajuan',
         'dokumen_pendukung', 'tanda_tangan_pegawai', 'atasan_langsung_user_id',
         'status',

@@ -13,16 +13,44 @@ $statusIcons = [
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0" style="color:#1a237e;"><i class="bi bi-bar-chart-fill me-2"></i>Laporan Pengajuan Cuti</h4>
-    <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-3 no-print">
-        <i class="bi bi-printer me-1"></i>Cetak
-    </button>
+    <h4 class="mb-0" style="color:#1a237e;">
+        <i class="bi bi-bar-chart-fill me-2"></i>Laporan Pengajuan Cuti
+        @if($periodeLabel)
+            <span class="badge rounded-pill align-middle" style="background:#1a237e;color:#fff;font-size:.75rem;">{{ $periodeLabel }}</span>
+        @endif
+    </h4>
+    <div class="d-flex gap-2">
+        <a href="{{ route('laporan.export', request()->query()) }}" class="btn btn-success btn-sm rounded-pill px-3 no-print">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-3 no-print">
+            <i class="bi bi-printer me-1"></i>Cetak
+        </button>
+    </div>
 </div>
 
 {{-- FILTER --}}
 <div class="card mb-3 no-print">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small">Bulan</label>
+                <select name="bulan" class="form-select form-select-sm">
+                    <option value="">Semua Bulan</option>
+                    @foreach($bulanList as $num => $namaBulan)
+                        <option value="{{ $num }}" {{ request('bulan') == $num ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Tahun</label>
+                <select name="tahun" class="form-select form-select-sm">
+                    <option value="">Semua Tahun</option>
+                    @foreach(range(date('Y') - 5, date('Y') + 1) as $th)
+                        <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>{{ $th }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-2">
                 <label class="form-label small">Dari Tanggal</label>
                 <input type="date" name="dari" class="form-control form-control-sm" value="{{ request('dari') }}">
@@ -145,6 +173,10 @@ $statusIcons = [
                     <th class="text-center"><span class="badge" style="background:#6f42c1;color:#fff;">Wkota</span></th>
                     <th>Status</th>
                         <th>Tgl Pengajuan</th>
+                        <th class="text-center">N-2</th>
+                        <th class="text-center">N-1</th>
+                        <th class="text-center">N</th>
+                        <th class="text-center">Sisa Cuti</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -157,6 +189,8 @@ $statusIcons = [
                         $isekda = $statusIcons[$p->status_sekda] ?? $statusIcons['pending'];
                         $ikad = $statusIcons[$p->status_kepala_dinas] ?? $statusIcons['pending'];
                         $iwk = $statusIcons[$p->status_walikota] ?? $statusIcons['pending'];
+                        $saldo = $p->pegawai->saldoCutis->first();
+                        $sisaTotal = $saldo ? ((int) $saldo->saldo_n2 + (int) $saldo->saldo_n1 + (int) $saldo->saldo_n) : null;
                     @endphp
                     <tr>
                         <td>{{ $no++ }}</td>
@@ -202,9 +236,13 @@ $statusIcons = [
                         </td>
                         <td><span class="badge badge-{{ $p->status }}">{{ $p->status }}</span></td>
                         <td class="small">{{ $p->tanggal_pengajuan?->format('d/m/Y') }}</td>
+                        <td class="text-center">{{ $saldo?->saldo_n2 ?? '-' }}</td>
+                        <td class="text-center">{{ $saldo?->saldo_n1 ?? '-' }}</td>
+                        <td class="text-center">{{ $saldo?->saldo_n ?? '-' }}</td>
+                        <td class="text-center fw-bold">{{ $sisaTotal !== null ? $sisaTotal . ' hr' : '-' }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="17" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>Tidak ada data.</td></tr>
+                    <tr><td colspan="21" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>Tidak ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>

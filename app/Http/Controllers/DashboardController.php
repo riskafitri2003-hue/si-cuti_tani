@@ -56,9 +56,9 @@ class DashboardController extends Controller
             'ditolak' => PengajuanCuti::where('status', 'ditolak')->count(),
         ];
 
-        // Data saldo cuti untuk pegawai
+        // Data saldo cuti untuk semua akun yang terhubung data pegawai
         $saldoCutis = collect();
-        if ($user->isPegawai() && $user->nip) {
+        if ($user->nip) {
             $saldoCutis = SaldoCuti::where('nip', $user->nip)->get();
         }
 

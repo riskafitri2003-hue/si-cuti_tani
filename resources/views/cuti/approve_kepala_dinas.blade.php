@@ -74,6 +74,26 @@
                     </div>
                 @endif
 
+                @if(!$isTolak)
+                <div class="col-12">
+                    <label class="form-label fw-bold">Rincian Hari</label>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small">Disetujui (hari)</label>
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_disetujui_hari" id="kdSetujuHari" class="form-control" value="{{ $cuti->kepala_dinas_disetujui_hari ?? $cuti->lama_cuti_hari }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Ditangguhkan (hari) &mdash; otomatis</label>
+                            <input type="number" min="0" name="kepala_dinas_ditangguhkan_hari" id="kdTangguhkanHari" class="form-control bg-light" value="{{ $cuti->kepala_dinas_ditangguhkan_hari ?? 0 }}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Tidak Disetujui (hari)</label>
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_tidak_disetujui_hari" id="kdTolakHari" class="form-control" value="{{ $cuti->kepala_dinas_tidak_disetujui_hari ?? 0 }}">
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Ditangguhkan = {{ $cuti->lama_cuti_hari }} &minus; disetujui &minus; tidak disetujui (dihitung otomatis).</p>
+                </div>
+
                 <div class="col-12">
                     <label class="form-label">Catatan</label>
                     <textarea name="catatan_kepala_dinas" class="form-control" rows="2" placeholder="Catatan (opsional)"></textarea>
@@ -86,6 +106,10 @@
                     <label class="form-label">NIP Kepala Dinas</label>
                     <input type="text" name="nip_kepala_dinas" class="form-control" placeholder="NIP" value="{{ auth()->user()->nip }}">
                 </div>
+
+                @if($isTolak)
+                    <input type="hidden" name="kepala_dinas_tidak_disetujui_hari" value="{{ $cuti->lama_cuti_hari }}">
+                @endif
 
                 @if(!$isTolak)
                 {{-- TANDA TANGAN KEPALA DINAS --}}
@@ -150,5 +174,34 @@ function saveSignatureKD() {
         document.getElementById('tanda-tangan-data-kd').value = signaturePadKD.toDataURL('image/png');
     }
 }
+
+var lamaCutiKD = {{ $cuti->lama_cuti_hari }};
+
+function recalcKD() {
+    var sEl = document.getElementById('kdSetujuHari');
+    var tEl = document.getElementById('kdTolakHari');
+    var gEl = document.getElementById('kdTangguhkanHari');
+    if (!sEl || !tEl || !gEl) return;
+    var s = parseInt(sEl.value, 10) || 0;
+    var t = parseInt(tEl.value, 10) || 0;
+    if (s + t > lamaCutiKD) {
+        if (document.activeElement === sEl) {
+            s = Math.max(lamaCutiKD - t, 0);
+            sEl.value = s;
+        } else {
+            t = Math.max(lamaCutiKD - s, 0);
+            tEl.value = t;
+        }
+    }
+    gEl.value = lamaCutiKD - s - t;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    ['kdSetujuHari', 'kdTolakHari'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', recalcKD);
+    });
+    recalcKD();
+});
 </script>
 @endsection
