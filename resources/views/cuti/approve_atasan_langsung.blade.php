@@ -106,6 +106,7 @@
                     <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Gambarkan tanda tangan Anda di area di atas.</p>
                 </div>
                 @endif
+                @endif
             </div>
             <div class="d-flex gap-2 mt-4">
                 <button type="submit" class="btn rounded-pill px-4 {{ $isTolak ? 'btn-reject' : 'btn-approve' }}" onclick="saveSignatureAL()">
