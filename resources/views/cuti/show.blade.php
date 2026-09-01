@@ -37,7 +37,7 @@
                 <i class="bi bi-pen me-1"></i>Tanda Tangan Wali Kota
             </a>
         @endif
-        @if($cuti->pegawai->wa && auth()->user()->isAdmin())
+        @if($cuti->pegawai->wa)
             <a href="https://wa.me/{{ $cuti->pegawai->wa }}?text={{ urlencode('Notifikasi Cuti: Pengajuan cuti Anda (' . $cuti->jenisCuti->nama . ', ' . $cuti->lama_cuti_hari . ' hari) sedang dalam proses. Status: ' . $cuti->status) }}" target="_blank" class="btn btn-sm rounded-pill px-3" style="background:#25d366;color:#fff;">
                 <i class="bi bi-whatsapp me-1"></i>Kirim WA
             </a>
@@ -62,7 +62,7 @@
     $isOwner = auth()->user()->isPegawai() && auth()->user()->nip === $cuti->nip;
     $isAdmin = auth()->user()->isAdmin();
     $statusProses = !in_array($cuti->status, ['disetujui', 'ditolak']);
-    $canSend = ($isOwner || $isAdmin) && $statusProses && $nextApprover;
+    $canSend = $statusProses && $nextApprover;
     $nextWa = $nextApprover->pegawai->wa ?? $nextApprover->wa ?? null;
     $nextEmail = $nextApprover->pegawai->email ?? $nextApprover->email ?? null;
 @endphp
@@ -269,8 +269,8 @@
                 <td>4. Cuti Melahirkan {{ $cuti->jenisCuti->kode == 4 ? '✔' : '' }}</td>
             </tr>
             <tr>
-                <td>5. Cuti Alasan Penting {{ $cuti->jenisCuti->kode == 5 ? '✔' : '' }}</td>
-                <td>6. Cuti Di Luar Tanggungan Negara {{ $cuti->jenisCuti->kode == 6 ? '✔' : '' }}</td>
+                <td>5. Cuti Karena Alasan Penting {{ $cuti->jenisCuti->kode == 5 ? '✔' : '' }}</td>
+                <td>6. Cuti di Luar Tanggungan Negara {{ $cuti->jenisCuti->kode == 6 ? '✔' : '' }}</td>
             </tr>
             <tr>
                 <td colspan="2">7. Cuti Haji/Umroh {{ $cuti->jenisCuti->kode == 7 ? '✔' : '' }}</td>
@@ -328,10 +328,23 @@
             </tr>
         </table>
 
-        {{-- DOKUMEN PENDUKUNG --}}
+        {{-- TANDA TANGAN PEMOHON (sesuai standar BKN: di bawah VI) --}}
+        <div style="max-width:340px;margin-left:auto;">
+            <div class="text-end mb-2">Bukittinggi, {{ strtolower($cuti->tanggal_pengajuan?->format('d F Y')) }}</div>
+            <div class="text-end mb-1">Yang mengajukan,</div>
+            <div class="text-center" style="height:70px;">
+                @if($cuti->tanda_tangan_pegawai)
+                    <img src="{{ asset('storage/' . $cuti->tanda_tangan_pegawai) }}" alt="Tanda Tangan Pegawai" style="max-width:150px;">
+                @endif
+            </div>
+            <div class="text-center fw-semibold">{{ $cuti->pegawai->nama }}</div>
+            <div class="text-center small">NIP. {{ $cuti->pegawai->nip }}</div>
+        </div>
+
+        {{-- DOKUMEN PENDUKUNG (lampiran, tidak bernomor bagian) --}}
         @if($cuti->dokumen_pendukung)
-        <table class="table table-bordered mb-3">
-            <tr><th class="bg-black text-white"><i class="bi bi-paperclip me-1"></i>VII. DOKUMEN PENDUKUNG</th></tr>
+        <table class="table table-bordered mb-3" style="margin-top:12px;">
+            <tr><th class="bg-black text-white"><i class="bi bi-paperclip me-1"></i>DOKUMEN PENDUKUNG</th></tr>
             <tr>
                 <td>
                     <a href="{{ route('cuti.dokumen', $cuti) }}" class="text-decoration-none">
@@ -353,8 +366,9 @@
                 <td style="vertical-align:top;">
                     @if($cuti->nama_atasan_langsung)
                     <div>1. Disetujui <span class="float-end">: {{ $cuti->atasan_langsung_disetujui_hari ? $cuti->atasan_langsung_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_atasan_langsung === 'disetujui' ? '✔' : '' }}</span></div>
-                    <div>2. Ditangguhkan <span class="float-end">: {{ $cuti->atasan_langsung_ditangguhkan_hari ? $cuti->atasan_langsung_ditangguhkan_hari . ' hari' : '-' }}</span></div>
-                    <div>3. Tidak Disetujui <span class="float-end">: {{ $cuti->atasan_langsung_tidak_disetujui_hari ? $cuti->atasan_langsung_tidak_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_atasan_langsung === 'tidak_disetujui' ? '✔' : '' }}</span></div>
+                    <div>2. Perubahan <span class="float-end">: {{ $cuti->atasan_langsung_perubahan_hari ? $cuti->atasan_langsung_perubahan_hari . ' hari' : '-' }} {{ $cuti->status_atasan_langsung === 'perubahan' ? '✔' : '' }}</span></div>
+                    <div>3. Ditangguhkan <span class="float-end">: {{ $cuti->atasan_langsung_ditangguhkan_hari ? $cuti->atasan_langsung_ditangguhkan_hari . ' hari' : '-' }}</span></div>
+                    <div>4. Tidak Disetujui <span class="float-end">: {{ $cuti->atasan_langsung_tidak_disetujui_hari ? $cuti->atasan_langsung_tidak_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_atasan_langsung === 'tidak_disetujui' ? '✔' : '' }}</span></div>
                     @else
                     <div class="text-muted"><i class="bi bi-clock me-1"></i>Menunggu pertimbangan Atasan Langsung</div>
                     @endif
@@ -362,8 +376,9 @@
                 <td style="vertical-align:top;">
                     @if($cuti->nama_kepala_dinas)
                     <div>1. Disetujui <span class="float-end">: {{ $cuti->kepala_dinas_disetujui_hari ? $cuti->kepala_dinas_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_kepala_dinas === 'disetujui' ? '✔' : '' }}</span></div>
-                    <div>2. Ditangguhkan <span class="float-end">: {{ $cuti->kepala_dinas_ditangguhkan_hari ? $cuti->kepala_dinas_ditangguhkan_hari . ' hari' : '-' }}</span></div>
-                    <div>3. Tidak Disetujui <span class="float-end">: {{ $cuti->kepala_dinas_tidak_disetujui_hari ? $cuti->kepala_dinas_tidak_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_kepala_dinas === 'tidak_disetujui' ? '✔' : '' }}</span></div>
+                    <div>2. Perubahan <span class="float-end">: {{ $cuti->kepala_dinas_perubahan_hari ? $cuti->kepala_dinas_perubahan_hari . ' hari' : '-' }} {{ $cuti->status_kepala_dinas === 'perubahan' ? '✔' : '' }}</span></div>
+                    <div>3. Ditangguhkan <span class="float-end">: {{ $cuti->kepala_dinas_ditangguhkan_hari ? $cuti->kepala_dinas_ditangguhkan_hari . ' hari' : '-' }}</span></div>
+                    <div>4. Tidak Disetujui <span class="float-end">: {{ $cuti->kepala_dinas_tidak_disetujui_hari ? $cuti->kepala_dinas_tidak_disetujui_hari . ' hari' : '-' }} {{ $cuti->status_kepala_dinas === 'tidak_disetujui' ? '✔' : '' }}</span></div>
                     @else
                     <div class="text-muted"><i class="bi bi-clock me-1"></i>Menunggu keputusan Kepala Dinas</div>
                     @endif
@@ -381,6 +396,9 @@
                 <td>
                     <div class="fw-semibold">{{ $cuti->nama_kepala_dinas ?? '-' }}</div>
                     <div class="small">NIP. {{ $cuti->nip_kepala_dinas ?? '-' }}</div>
+                    @if($cuti->nomor_surat)
+                        <div class="small mt-1">Nomor: <strong>{{ $cuti->nomor_surat }}</strong></div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -476,98 +494,19 @@
         </div>
         @endif
 
-        {{-- VIII. TANDA TANGAN --}}
+        {{-- KU/S PENGESAHAN TAHAP INTERN --}}
         @if($cuti->status === 'disetujui')
-            @if($cuti->isKepalaDinasApplicant())
-            <div style="margin-top:30px;margin-bottom:20px;">
-                <div class="row">
-                    <div class="col-6 text-center">
-                        <div class="mb-1">Ditetapkan di : <strong>Bukittinggi</strong></div>
-                        <div class="mb-3">Pada tanggal  : <strong>{{ $cuti->tanggal_walikota?->format('d F Y') }}</strong></div>
-
-                        <div class="fw-bold mb-4" style="color:#000;">WALIKOTA BUKITTINGGI</div>
-
-                        @if($cuti->tanda_tangan_walikota)
-                            <div class="mb-2"><img src="{{ asset('storage/' . $cuti->tanda_tangan_walikota) }}" alt="Tanda Tangan Wali Kota" style="max-width:180px;"></div>
-                        @else
-                            <div style="border-top:2px solid #333;display:inline-block;width:280px;margin-bottom:4px;"></div>
-                        @endif
-                        <div class="fw-semibold">{{ $cuti->nama_walikota }}</div>
-                        <div class="small">NIP. {{ $cuti->nip_walikota ?? '-' }}</div>
-                    </div>
-                    <div class="col-6 text-end">
-                        <div class="mb-1">Ditetapkan di : <strong>Bukittinggi</strong></div>
-                        <div class="mb-3">Pada tanggal  : <strong>{{ $cuti->tanggal_sekda?->format('d F Y') }}</strong></div>
-
-                        <div class="fw-bold mb-4" style="color:#000;">SEKRETARIS DAERAH</div>
-
-                        @if($cuti->tanda_tangan_sekda)
-                            <div class="mb-2"><img src="{{ asset('storage/' . $cuti->tanda_tangan_sekda) }}" alt="Tanda Tangan Sekretaris Daerah" style="max-width:180px;"></div>
-                        @else
-                            <div style="border-top:2px solid #333;display:inline-block;width:280px;margin-bottom:4px;"></div>
-                        @endif
-                        <div class="fw-semibold">{{ $cuti->nama_sekda }}</div>
-                        <div class="small">NIP. {{ $cuti->nip_sekda ?? '-' }}</div>
-                    </div>
-                </div>
-            </div>
-            @else
-            <table class="table table-bordered ttd-table mb-0" style="margin-top:15px;">
-                <tr>
-                    <td colspan="3" class="text-end">
-                        <div>Bukittinggi, {{ strtolower($cuti->tanggal_pengajuan?->format('d F Y')) }}</div>
-                        <div class="mb-1">Yang mengajukan,</div>
-                        @if($cuti->tanda_tangan_pegawai)
-                            <img src="{{ asset('storage/' . $cuti->tanda_tangan_pegawai) }}" alt="Tanda Tangan Pegawai" style="max-width:150px;">
-                        @else
-                            <div style="height:60px;"></div>
-                        @endif
-                        <div class="fw-semibold">{{ $cuti->pegawai->nama }}</div>
-                        <div class="small">NIP. {{ $cuti->pegawai->nip }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="text-end">
-                        <div class="mb-1">Menyetujui,</div>
-                        <div class="small fw-semibold">Atasan Langsung</div>
-                        @if($cuti->tanda_tangan_atasan_langsung && $cuti->status_atasan_langsung === 'disetujui')
-                            <img src="{{ asset('storage/' . $cuti->tanda_tangan_atasan_langsung) }}" alt="Tanda Tangan Atasan Langsung" style="max-width:130px;">
-                        @else
-                            <div style="height:50px;"></div>
-                        @endif
-                        <div class="fw-semibold">{{ $cuti->nama_atasan_langsung ?? '..........................' }}</div>
-                        <div class="small">NIP. {{ $cuti->nip_atasan_langsung ?? '.........................' }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width:22%;" class="text-center align-middle">
-                        @if($cuti->status_kasubag === 'disetujui')
-                            <div class="fw-bold" style="font-size:1.05rem;">✔ KU</div>
-                            <div class="small">Kasubag Umum</div>
-                        @endif
-                    </td>
-                    <td class="text-end">
-                        <div class="mb-1 small fw-semibold">Kepala Dinas,</div>
-                        @if($cuti->tanda_tangan_kepala_dinas && $cuti->status_kepala_dinas === 'disetujui')
-                            <img src="{{ asset('storage/' . $cuti->tanda_tangan_kepala_dinas) }}" alt="Tanda Tangan Kepala Dinas" class="ttd-kd">
-                        @else
-                            <div style="height:35px;"></div>
-                        @endif
-                        <div class="fw-semibold">{{ $cuti->nama_kepala_dinas ?? '..........................' }}</div>
-                        <div class="small">NIP. {{ $cuti->nip_kepala_dinas ?? '.........................' }}</div>
-                        @if($cuti->nomor_surat)
-                            <div class="mt-1 small">Nomor: <strong>{{ $cuti->nomor_surat }}</strong></div>
-                        @endif
-                    </td>
-                    <td style="width:22%;" class="text-center align-middle">
-                        @if($cuti->status_sekretaris === 'disetujui')
-                            <div class="fw-bold" style="font-size:1.05rem;">✔ S</div>
-                            <div class="small">Sekretaris</div>
-                        @endif
-                    </td>
-                </tr>
-            </table>
+        <div class="text-center mt-1 small">
+            @if($cuti->status_kasubag === 'disetujui')
+                <span class="fw-bold">✔ KU</span> Kasubag Umum
             @endif
+            @if($cuti->status_kasubag === 'disetujui' && $cuti->status_sekretaris === 'disetujui')
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+            @endif
+            @if($cuti->status_sekretaris === 'disetujui')
+                <span class="fw-bold">✔ S</span> Sekretaris
+            @endif
+        </div>
         @endif
 
     </div>
@@ -577,7 +516,6 @@
     .badge-atasan-langsung, .badge-kepala-dinas { background:#000; color:#fff; }
     .section-body .text-success, .section-body .text-danger { color:#000; }
     .section-sekda, .section-walikota { border-left-color:#000; }
-    .ttd-table img.ttd-kd { max-width:80px; }
 
     @media print {
         @page { size: A4; margin: 5mm; }
@@ -597,8 +535,6 @@
         .section-header { padding: 1px 8px !important; font-size: 10px !important; }
         .section-body { padding: 3px 8px !important; }
         .card-body img { max-width: 70px !important; }
-        .ttd-table img { max-width: 70px !important; }
-        .ttd-table img.ttd-kd { max-width: 50px !important; }
         .card-body div[style*="width:280px"] { width: 180px !important; }
         .section-body .text-success, .section-body .text-danger, .section-body .text-muted { color: #000 !important; }
         .badge, .badge[style] { background: #000 !important; color: #fff !important; }

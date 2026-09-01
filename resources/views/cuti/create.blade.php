@@ -92,7 +92,7 @@
 
             <div class="card bg-light border-0 mb-3">
                 <div class="card-body py-3">
-                    <label class="form-label"><i class="bi bi-paperclip me-1 text-primary"></i>VII. Dokumen Pendukung <span class="text-muted fw-normal">(opsional)</span></label>
+                    <label class="form-label"><i class="bi bi-paperclip me-1 text-primary"></i>Lampiran Dokumen Pendukung <span class="text-muted fw-normal">(opsional)</span></label>
                     <input type="file" name="dokumen_pendukung" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                     <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Format: PDF, JPG, PNG. Maksimal 2MB. Kosongkan jika tidak perlu.</p>
                 </div>
@@ -100,7 +100,7 @@
 
             <div class="card bg-light border-0 mb-3">
                 <div class="card-body py-3">
-                    <label class="form-label"><i class="bi bi-pen me-1 text-primary"></i>VIII. Tanda Tangan Pegawai</label>
+                    <label class="form-label"><i class="bi bi-pen me-1 text-primary"></i>Tanda Tangan Pemohon</label>
                     <div class="border rounded p-2 bg-white" style="max-width:400px;">
                         <canvas id="signature-pad" width="380" height="200" style="width:100%;height:auto;cursor:crosshair;border:1px dashed #ccc;border-radius:6px;"></canvas>
                     </div>

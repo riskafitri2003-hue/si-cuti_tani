@@ -57,17 +57,29 @@
                 @else
                     <div class="col-12">
                         <label class="form-label fw-bold">Keputusan</label>
-                        <div class="d-flex gap-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="disetujui" id="kepalaDinasSetuju" checked>
-                                <label class="form-check-label fw-medium text-success" for="kepalaDinasSetuju">
-                                    <i class="bi bi-check-circle me-1"></i>Setuju & Tanda Tangan
+                        <div class="row g-2">
+                            <div class="col-md-3 col-6 form-check">
+                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="disetujui" id="kdSetuju" checked>
+                                <label class="form-check-label fw-medium text-success" for="kdSetuju">
+                                    <i class="bi bi-check-circle me-1"></i>Disetujui
                                 </label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="tidak_disetujui" id="kepalaDinasTolak">
-                                <label class="form-check-label fw-medium text-danger" for="kepalaDinasTolak">
-                                    <i class="bi bi-x-circle me-1"></i>Tidak Setuju
+                            <div class="col-md-3 col-6 form-check">
+                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="perubahan" id="kdPerubahan">
+                                <label class="form-check-label fw-medium" style="color:#b45309;" for="kdPerubahan">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Perubahan
+                                </label>
+                            </div>
+                            <div class="col-md-3 col-6 form-check">
+                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="ditangguhkan" id="kdDitangguhkan">
+                                <label class="form-check-label fw-medium text-secondary" for="kdDitangguhkan">
+                                    <i class="bi bi-pause-circle me-1"></i>Ditangguhkan
+                                </label>
+                            </div>
+                            <div class="col-md-3 col-6 form-check">
+                                <input class="form-check-input" type="radio" name="status_kepala_dinas" value="tidak_disetujui" id="kdTidakSetuju">
+                                <label class="form-check-label fw-medium text-danger" for="kdTidakSetuju">
+                                    <i class="bi bi-x-circle me-1"></i>Tidak Disetujui
                                 </label>
                             </div>
                         </div>
@@ -78,20 +90,24 @@
                 <div class="col-12">
                     <label class="form-label fw-bold">Rincian Hari</label>
                     <div class="row g-2">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small">Disetujui (hari)</label>
-                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_disetujui_hari" id="kdSetujuHari" class="form-control" value="{{ $cuti->kepala_dinas_disetujui_hari ?? $cuti->lama_cuti_hari }}">
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_disetujui_hari" id="kdSetujuHari" class="form-control" value="{{ $cuti->kepala_dinas_disetujui_hari ?? 0 }}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="form-label small">Perubahan (hari)</label>
+                            <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_perubahan_hari" id="kdPerubahanHari" class="form-control" value="{{ $cuti->kepala_dinas_perubahan_hari ?? 0 }}">
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label small">Ditangguhkan (hari) &mdash; otomatis</label>
                             <input type="number" min="0" name="kepala_dinas_ditangguhkan_hari" id="kdTangguhkanHari" class="form-control bg-light" value="{{ $cuti->kepala_dinas_ditangguhkan_hari ?? 0 }}" readonly>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small">Tidak Disetujui (hari)</label>
                             <input type="number" min="0" max="{{ $cuti->lama_cuti_hari }}" name="kepala_dinas_tidak_disetujui_hari" id="kdTolakHari" class="form-control" value="{{ $cuti->kepala_dinas_tidak_disetujui_hari ?? 0 }}">
                         </div>
                     </div>
-                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Ditangguhkan = {{ $cuti->lama_cuti_hari }} &minus; disetujui &minus; tidak disetujui (dihitung otomatis).</p>
+                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Bila keputusan <strong>Perubahan</strong>, isi jumlah hari yang disetujui setelah penyesuaian. Ditangguhkan = {{ $cuti->lama_cuti_hari }} &minus; disetujui &minus; perubahan &minus; tidak disetujui (dihitung otomatis).</p>
                 </div>
 
                 <div class="col-12">
@@ -131,8 +147,8 @@
             </div>
             <div class="d-flex gap-2 mt-4">
                 <button type="submit" class="btn rounded-pill px-4 {{ $isTolak ? 'btn-reject' : 'btn-approve' }}" onclick="saveSignatureKD()">
-                    <i class="bi {{ $isTolak ? 'bi-x-circle' : 'bi-check-circle' }} me-1"></i>
-                    {{ $isTolak ? 'Tolak' : 'Setujui' }}
+                    <i class="bi {{ $isTolak ? 'bi-x-circle' : 'bi-save' }} me-1"></i>
+                    {{ $isTolak ? 'Tolak' : 'Simpan Keputusan' }}
                 </button>
                 <a href="{{ route('cuti.index') }}" class="btn btn-outline-secondary rounded-pill px-4">Batal</a>
             </div>
@@ -178,27 +194,50 @@ function saveSignatureKD() {
 
 var lamaCutiKD = {{ $cuti->lama_cuti_hari }};
 
+function syncDecisionKD() {
+    var sEl = document.getElementById('kdSetujuHari');
+    var pEl = document.getElementById('kdPerubahanHari');
+    var gEl = document.getElementById('kdTangguhkanHari');
+    var xEl = document.getElementById('kdTolakHari');
+    var decision = document.querySelector('input[name="status_kepala_dinas"]:checked');
+    if (!decision || !sEl || !pEl || !gEl || !xEl) return;
+    switch (decision.value) {
+        case 'perubahan':     sEl.value = 0; pEl.value = lamaCutiKD; gEl.value = 0; xEl.value = 0; break;
+        case 'ditangguhkan':  sEl.value = 0; pEl.value = 0; gEl.value = lamaCutiKD; xEl.value = 0; break;
+        case 'tidak_disetujui': sEl.value = 0; pEl.value = 0; gEl.value = 0; xEl.value = lamaCutiKD; break;
+        default:              sEl.value = lamaCutiKD; pEl.value = 0; gEl.value = 0; xEl.value = 0;
+    }
+}
+
 function recalcKD() {
     var sEl = document.getElementById('kdSetujuHari');
-    var tEl = document.getElementById('kdTolakHari');
+    var pEl = document.getElementById('kdPerubahanHari');
     var gEl = document.getElementById('kdTangguhkanHari');
-    if (!sEl || !tEl || !gEl) return;
+    var xEl = document.getElementById('kdTolakHari');
+    if (!sEl || !pEl || !gEl || !xEl) return;
     var s = parseInt(sEl.value, 10) || 0;
-    var t = parseInt(tEl.value, 10) || 0;
-    if (s + t > lamaCutiKD) {
-        if (document.activeElement === sEl) {
-            s = Math.max(lamaCutiKD - t, 0);
-            sEl.value = s;
-        } else {
-            t = Math.max(lamaCutiKD - s, 0);
-            tEl.value = t;
-        }
+    var p = parseInt(pEl.value, 10) || 0;
+    var x = parseInt(xEl.value, 10) || 0;
+    if (s + p + x > lamaCutiKD) {
+        var active = document.activeElement;
+        var rest = (active === sEl ? p + x : active === pEl ? s + x : s + p);
+        var maxActive = lamaCutiKD - rest;
+        if (active === sEl) sEl.value = Math.max(maxActive, 0);
+        else if (active === pEl) pEl.value = Math.max(maxActive, 0);
+        else if (active === xEl) xEl.value = Math.max(maxActive, 0);
+        s = parseInt(sEl.value, 10) || 0;
+        p = parseInt(pEl.value, 10) || 0;
+        x = parseInt(xEl.value, 10) || 0;
     }
-    gEl.value = lamaCutiKD - s - t;
+    gEl.value = lamaCutiKD - s - p - x;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    ['kdSetujuHari', 'kdTolakHari'].forEach(function(id) {
+    syncDecisionKD();
+    document.querySelectorAll('input[name="status_kepala_dinas"]').forEach(function(r) {
+        r.addEventListener('change', function() { syncDecisionKD(); recalcKD(); });
+    });
+    ['kdSetujuHari', 'kdPerubahanHari', 'kdTolakHari'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener('input', recalcKD);
     });

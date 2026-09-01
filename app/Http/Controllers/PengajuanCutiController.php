@@ -293,21 +293,23 @@ class PengajuanCutiController extends Controller
         abort_if($cuti->atasan_langsung_user_id && auth()->id() !== $cuti->atasan_langsung_user_id, 403);
 
         $data = $request->validate([
-            'status_atasan_langsung' => ['required', 'in:disetujui,tidak_disetujui'],
+            'status_atasan_langsung' => ['required', 'in:disetujui,perubahan,ditangguhkan,tidak_disetujui'],
             'catatan_atasan_langsung' => ['nullable', 'string'],
             'nama_atasan_langsung' => ['required', 'string', 'max:255'],
             'nip_atasan_langsung' => ['nullable', 'string', 'max:50'],
             'atasan_langsung_disetujui_hari' => ['nullable', 'integer', 'min:0'],
+            'atasan_langsung_perubahan_hari' => ['nullable', 'integer', 'min:0'],
             'atasan_langsung_ditangguhkan_hari' => ['nullable', 'integer', 'min:0'],
             'atasan_langsung_tidak_disetujui_hari' => ['nullable', 'integer', 'min:0'],
-            'tanda_tangan_data' => $request->input('status_atasan_langsung') === 'disetujui'
+            'tanda_tangan_data' => in_array($request->input('status_atasan_langsung'), ['disetujui', 'perubahan', 'ditangguhkan'])
                 ? ['required', 'string']
                 : ['nullable', 'string'],
         ]);
 
-        // Rincian hari (disetujui / ditangguhkan / tidak disetujui)
+        // Rincian hari (disetujui / perubahan / ditangguhkan / tidak disetujui)
         $hari = $this->normalisasiHari(
             $data['atasan_langsung_disetujui_hari'] ?? null,
+            $data['atasan_langsung_perubahan_hari'] ?? null,
             $data['atasan_langsung_ditangguhkan_hari'] ?? null,
             $data['atasan_langsung_tidak_disetujui_hari'] ?? null,
             $data['status_atasan_langsung'],
@@ -316,11 +318,16 @@ class PengajuanCutiController extends Controller
 
         if ($hari === null) {
             return back()
-                ->withErrors('Total rincian hari (disetujui + ditangguhkan + tidak disetujui) harus sama dengan lama cuti (' . $cuti->lama_cuti_hari . ' hari).')
+                ->withErrors('Total rincian hari (disetujui + perubahan + ditangguhkan + tidak disetujui) harus sama dengan lama cuti (' . $cuti->lama_cuti_hari . ' hari).')
                 ->withInput();
         }
 
-        [$data['atasan_langsung_disetujui_hari'], $data['atasan_langsung_ditangguhkan_hari'], $data['atasan_langsung_tidak_disetujui_hari']] = $hari;
+        [
+            $data['atasan_langsung_disetujui_hari'],
+            $data['atasan_langsung_perubahan_hari'],
+            $data['atasan_langsung_ditangguhkan_hari'],
+            $data['atasan_langsung_tidak_disetujui_hari'],
+        ] = $hari;
 
         // Simpan tanda tangan
         if ($request->filled('tanda_tangan_data')) {
@@ -332,12 +339,21 @@ class PengajuanCutiController extends Controller
         }
 
         $data['tanggal_atasan_langsung'] = now();
-        $data['status'] = $data['status_atasan_langsung'] === 'tidak_disetujui' ? 'ditolak' : 'diproses_kasubag';
+
+        if ($data['status_atasan_langsung'] === 'tidak_disetujui') {
+            $data['status'] = 'ditolak';
+        } elseif ($data['status_atasan_langsung'] === 'ditangguhkan') {
+            $data['status'] = 'diajukan';
+        } else {
+            $data['status'] = 'diproses_kasubag';
+        }
 
         $cuti->update($data);
 
         if ($data['status_atasan_langsung'] === 'tidak_disetujui') {
             $this->kembalikanSaldo($cuti);
+        } elseif ($data['status_atasan_langsung'] === 'perubahan') {
+            $this->kembalikanSebagianSaldo($cuti, (int) $cuti->lama_cuti_hari - (int) $cuti->atasan_langsung_perubahan_hari);
         }
 
         $this->kirimNotifikasi($cuti, 'Atasan Langsung');
@@ -433,24 +449,26 @@ class PengajuanCutiController extends Controller
         abort_if($cuti->status !== 'diproses_kepala_dinas', 403);
 
         $rules = [
-            'status_kepala_dinas' => ['required', 'in:disetujui,tidak_disetujui'],
+            'status_kepala_dinas' => ['required', 'in:disetujui,perubahan,ditangguhkan,tidak_disetujui'],
             'catatan_kepala_dinas' => ['nullable', 'string'],
             'nama_kepala_dinas' => ['required', 'string', 'max:255'],
             'nip_kepala_dinas' => ['nullable', 'string', 'max:50'],
             'nomor_surat' => ['nullable', 'string', 'max:100'],
             'kepala_dinas_disetujui_hari' => ['nullable', 'integer', 'min:0'],
+            'kepala_dinas_perubahan_hari' => ['nullable', 'integer', 'min:0'],
             'kepala_dinas_ditangguhkan_hari' => ['nullable', 'integer', 'min:0'],
             'kepala_dinas_tidak_disetujui_hari' => ['nullable', 'integer', 'min:0'],
-            'tanda_tangan_data' => $request->input('status_kepala_dinas', 'disetujui') === 'disetujui'
+            'tanda_tangan_data' => in_array($request->input('status_kepala_dinas', 'disetujui'), ['disetujui', 'perubahan', 'ditangguhkan'])
                 ? ['required', 'string']
                 : ['nullable', 'string'],
         ];
 
         $data = $request->validate($rules);
 
-        // Rincian hari (disetujui / ditangguhkan / tidak disetujui)
+        // Rincian hari (disetujui / perubahan / ditangguhkan / tidak disetujui)
         $hari = $this->normalisasiHari(
             $data['kepala_dinas_disetujui_hari'] ?? null,
+            $data['kepala_dinas_perubahan_hari'] ?? null,
             $data['kepala_dinas_ditangguhkan_hari'] ?? null,
             $data['kepala_dinas_tidak_disetujui_hari'] ?? null,
             $data['status_kepala_dinas'],
@@ -459,11 +477,16 @@ class PengajuanCutiController extends Controller
 
         if ($hari === null) {
             return back()
-                ->withErrors('Total rincian hari (disetujui + ditangguhkan + tidak disetujui) harus sama dengan lama cuti (' . $cuti->lama_cuti_hari . ' hari).')
+                ->withErrors('Total rincian hari (disetujui + perubahan + ditangguhkan + tidak disetujui) harus sama dengan lama cuti (' . $cuti->lama_cuti_hari . ' hari).')
                 ->withInput();
         }
 
-        [$data['kepala_dinas_disetujui_hari'], $data['kepala_dinas_ditangguhkan_hari'], $data['kepala_dinas_tidak_disetujui_hari']] = $hari;
+        [
+            $data['kepala_dinas_disetujui_hari'],
+            $data['kepala_dinas_perubahan_hari'],
+            $data['kepala_dinas_ditangguhkan_hari'],
+            $data['kepala_dinas_tidak_disetujui_hari'],
+        ] = $hari;
 
         $data['tanggal_kepala_dinas'] = now();
         $data['tanggal_surat'] = now();
@@ -479,6 +502,8 @@ class PengajuanCutiController extends Controller
 
         if ($data['status_kepala_dinas'] === 'tidak_disetujui') {
             $data['status'] = 'ditolak';
+        } elseif ($data['status_kepala_dinas'] === 'ditangguhkan') {
+            $data['status'] = 'diproses_kepala_dinas';
         } elseif ($cuti->needsWalikota()) {
             $data['status'] = 'diproses_walikota';
         } else {
@@ -489,6 +514,8 @@ class PengajuanCutiController extends Controller
 
         if ($data['status_kepala_dinas'] === 'tidak_disetujui') {
             $this->kembalikanSaldo($cuti);
+        } elseif ($data['status_kepala_dinas'] === 'perubahan') {
+            $this->kembalikanSebagianSaldo($cuti, (int) $cuti->lama_cuti_hari - (int) $cuti->kepala_dinas_perubahan_hari);
         }
 
         $this->kirimNotifikasi($cuti, 'Kepala Dinas');
@@ -609,6 +636,36 @@ class PengajuanCutiController extends Controller
         SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n2', (int) $cuti->potongan_saldo_n2);
         SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n1', (int) $cuti->potongan_saldo_n1);
         SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n', (int) $cuti->potongan_saldo_n);
+    }
+
+    /**
+     * Kembalikan sebagian saldo (untuk keputusan "Perubahan") dengan urutan
+     * pemotongan terbalik (N-2 dulu). Potongan pada pengajuan ikut disesuaikan
+     * agar tidak terjadi refund ganda bila nanti ditolak penuh.
+     */
+    private function kembalikanSebagianSaldo(PengajuanCuti $cuti, int $hari): void
+    {
+        $sisa = $hari;
+        if ($sisa <= 0) {
+            return;
+        }
+
+        $refN2 = min((int) $cuti->potongan_saldo_n2, $sisa);
+        $sisa -= $refN2;
+
+        $refN1 = min((int) $cuti->potongan_saldo_n1, $sisa);
+        $sisa -= $refN1;
+
+        $refN = min((int) $cuti->potongan_saldo_n, $sisa);
+
+        SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n2', $refN2);
+        SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n1', $refN1);
+        SaldoCuti::where('nip', $cuti->nip)->increment('saldo_n', $refN);
+
+        $cuti->potongan_saldo_n2 = max((int) $cuti->potongan_saldo_n2 - $refN2, 0);
+        $cuti->potongan_saldo_n1 = max((int) $cuti->potongan_saldo_n1 - $refN1, 0);
+        $cuti->potongan_saldo_n = max((int) $cuti->potongan_saldo_n - $refN, 0);
+        $cuti->save();
     }
 
     /**
@@ -756,27 +813,30 @@ class PengajuanCutiController extends Controller
     }
 
     /**
-     * Normalisasi rincian hari (disetujui, ditangguhkan, tidak disetujui).
+     * Normalisasi rincian hari (disetujui, perubahan, ditangguhkan, tidak disetujui).
      * Bila tidak ada yang diisi, diisi otomatis dari status keputusan.
      * Return null bila total tidak sama dengan lama cuti.
      */
-    private function normalisasiHari($disetujui, $ditangguhkan, $tidakDisetujui, string $status, int $lama): ?array
+    private function normalisasiHari($disetujui, $perubahan, $ditangguhkan, $tidakDisetujui, string $status, int $lama): ?array
     {
-        if ($disetujui === null && $ditangguhkan === null && $tidakDisetujui === null) {
+        if ($disetujui === null && $perubahan === null && $ditangguhkan === null && $tidakDisetujui === null) {
             return match ($status) {
-                'tidak_disetujui' => [0, 0, $lama],
-                default           => [$lama, 0, 0],
+                'tidak_disetujui' => [0, 0, 0, $lama],
+                'perubahan'       => [0, $lama, 0, 0],
+                'ditangguhkan'    => [0, 0, $lama, 0],
+                default           => [$lama, 0, 0, 0],
             };
         }
 
         $s = (int) $disetujui;
+        $p = (int) $perubahan;
         $t = (int) $ditangguhkan;
         $x = (int) $tidakDisetujui;
 
-        if ($s + $t + $x !== $lama) {
+        if ($s + $p + $t + $x !== $lama) {
             return null;
         }
 
-        return [$s, $t, $x];
+        return [$s, $p, $t, $x];
     }
 }
