@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="d-flex align-items-center gap-3 mb-3">
-    <h4 class="mb-0" style="color:#0d6efd;"><i class="bi bi-person-check me-2"></i>VII-A. Pertimbangan Atasan Langsung</h4>
+    <h4 class="mb-0" style="color:#0d6efd;"><i class="bi bi-person-check me-2"></i>VII. Pertimbangan Atasan Langsung</h4>
     @if($isTolak)
         <span class="badge bg-danger fs-6 rounded-pill px-3"><i class="bi bi-x-circle me-1"></i>Tolak</span>
     @else

@@ -54,6 +54,22 @@ class PengajuanCutiController extends Controller
         return view('cuti.index', compact('pengajuanCutis'));
     }
 
+    /**
+     * Riwayat cuti milik pengguna sendiri (semua akun).
+     */
+    public function riwayat()
+    {
+        $user = Auth::user();
+
+        $pengajuanCutis = PengajuanCuti::with(['pegawai', 'jenisCuti'])
+            ->whereNotNull('nip')
+            ->where('nip', $user->nip)
+            ->latest()
+            ->paginate(10);
+
+        return view('cuti.riwayat', compact('pengajuanCutis'));
+    }
+
     public function create()
     {
         $user = Auth::user();
@@ -79,6 +95,7 @@ class PengajuanCutiController extends Controller
         $isKepalaDinasApplicant = (bool) optional(\App\Models\User::where('nip', $pegawaiNip)->first())->isKepalaDinas();
 
         $rules = [
+            'tanggal_pengajuan' => ['required', 'date'],
             'kode_jenis_cuti' => ['required', 'exists:jenis_cutis,kode'],
             'alasan_cuti' => ['required', 'string'],
             'tanggal_mulai' => ['required', 'date'],
@@ -152,7 +169,7 @@ class PengajuanCutiController extends Controller
             'dokumen_pendukung' => $dokumenPath,
             'tanda_tangan_pegawai' => $ttdPath,
             'atasan_langsung_user_id' => $isKepalaDinasApplicant ? null : $data['atasan_langsung_user_id'],
-            'tanggal_pengajuan' => now(),
+            'tanggal_pengajuan' => $data['tanggal_pengajuan'],
             'status' => $isKepalaDinasApplicant ? 'diproses_sekda' : 'diajukan',
             'status_atasan_langsung' => 'pending',
             'status_kasubag' => 'pending',
@@ -381,6 +398,7 @@ class PengajuanCutiController extends Controller
             'catatan_kasubag' => ['nullable', 'string'],
             'nama_kasubag' => ['required', 'string', 'max:255'],
             'nip_kasubag' => ['nullable', 'string', 'max:50'],
+            'nomor_formulir' => ['required_if:status_kasubag,disetujui', 'string', 'max:100'],
         ]);
 
         $data['tanggal_kasubag'] = now();

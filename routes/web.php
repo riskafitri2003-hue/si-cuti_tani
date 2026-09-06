@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/cuti', [PengajuanCutiController::class, 'index'])->name('cuti.index');
     Route::get('/cuti/create', [PengajuanCutiController::class, 'create'])->name('cuti.create');
     Route::post('/cuti', [PengajuanCutiController::class, 'store'])->name('cuti.store');
+    Route::get('/cuti/riwayat', [PengajuanCutiController::class, 'riwayat'])->name('cuti.riwayat');
     Route::get('/cuti/{cuti}', [PengajuanCutiController::class, 'show'])->name('cuti.show');
     Route::get('/cuti/{cuti}/dokumen', [PengajuanCutiController::class, 'downloadDokumen'])->name('cuti.dokumen');
     Route::post('/cuti/{cuti}/kirim-email', [PengajuanCutiController::class, 'kirimEmail'])->name('cuti.kirim-email');

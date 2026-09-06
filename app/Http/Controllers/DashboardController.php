@@ -62,6 +62,12 @@ class DashboardController extends Controller
             $saldoCutis = SaldoCuti::where('nip', $user->nip)->get();
         }
 
-        return view('dashboard', compact('pengajuanCutis', 'stats', 'saldoCutis'));
+        // Riwayat cuti milik pengguna sendiri (semua akun)
+        $riwayatTotal = $user->nip ? PengajuanCuti::where('nip', $user->nip)->count() : 0;
+        $riwayatCutis = $user->nip
+            ? PengajuanCuti::with(['pegawai', 'jenisCuti'])->where('nip', $user->nip)->latest()->take(5)->get()
+            : collect();
+
+        return view('dashboard', compact('pengajuanCutis', 'stats', 'saldoCutis', 'riwayatCutis', 'riwayatTotal'));
     }
 }

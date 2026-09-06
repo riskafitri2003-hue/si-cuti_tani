@@ -45,6 +45,12 @@
                         <textarea name="catatan_kasubag" class="form-control" rows="2" placeholder="Alasan tidak menyetujui (opsional)"></textarea>
                     </div>
                 @else
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-file-earmark me-1"></i>No. Formulir</label>
+                        <input type="text" name="nomor_formulir" class="form-control" placeholder="contoh: 851/012" value="{{ $cuti->nomor_formulir }}" required>
+                        <div class="form-text">Diisi saat menyetujui, contoh: 851/012 (tampil di header formulir).</div>
+                    </div>
+                    <div class="col-md-6"></div>
                     <div class="col-12">
                         <div class="form-check form-check-lg">
                             <input class="form-check-input" type="checkbox" name="status_kasubag" value="disetujui" id="kasubagSetuju" required>

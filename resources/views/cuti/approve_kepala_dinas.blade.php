@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="d-flex align-items-center gap-3 mb-3">
-    <h4 class="mb-0" style="color:#198754;"><i class="bi bi-check2-square me-2"></i>VII-D. Keputusan Kepala Dinas</h4>
+    <h4 class="mb-0" style="color:#198754;"><i class="bi bi-check2-square me-2"></i>VIII. Keputusan Pejabat yang Berwenang Memberikan Cuti</h4>
     @if($isTolak)
         <span class="badge bg-danger fs-6 rounded-pill px-3"><i class="bi bi-x-circle me-1"></i>Tolak</span>
     @else

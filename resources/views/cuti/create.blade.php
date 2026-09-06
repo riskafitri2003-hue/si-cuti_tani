@@ -27,6 +27,14 @@
 
             <div class="card bg-light border-0 mb-3">
                 <div class="card-body py-3">
+                    <label class="form-label"><i class="bi bi-calendar-event me-1 text-primary"></i>I. Tanggal Pengajuan</label>
+                    <input type="date" name="tanggal_pengajuan" class="form-control" required>
+                    <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Pilih tanggal pengajuan cuti Anda secara manual.</p>
+                </div>
+            </div>
+
+            <div class="card bg-light border-0 mb-3">
+                <div class="card-body py-3">
                     <div class="mb-3">
                         <label class="form-label"><i class="bi bi-bookmark me-1 text-primary"></i>II. Jenis Cuti Yang Diambil</label>
                         <select name="kode_jenis_cuti" class="form-select" required>

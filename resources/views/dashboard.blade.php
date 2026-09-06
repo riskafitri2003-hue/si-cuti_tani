@@ -62,6 +62,51 @@
     </div>
 </div>
 
+@if(auth()->user()->nip)
+{{-- RIWAYAT CUTI SENDIRI (semua akun) --}}
+<div class="card mb-4">
+    <div class="card-header-custom d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-clock-history me-1"></i>Riwayat Cuti Saya
+            <span class="badge bg-primary rounded-pill ms-2">{{ $riwayatTotal }} pengajuan</span>
+        </div>
+        <a href="{{ route('cuti.riwayat') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+            <i class="bi bi-list-ul me-1"></i>Lihat Semua
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Jenis Cuti</th>
+                    <th>Tanggal</th>
+                    <th>Lama</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($riwayatCutis as $p)
+                <tr>
+                    <td class="fw-medium">{{ $p->jenisCuti->nama }}</td>
+                    <td class="small">{{ $p->tanggal_mulai->format('d M Y') }} - {{ $p->tanggal_selesai->format('d M Y') }}</td>
+                    <td>{{ $p->lama_cuti_hari }} hari</td>
+                    <td><span class="badge badge-{{ $p->status }}">{{ $p->status }}</span></td>
+                    <td class="text-end">
+                        <a href="{{ route('cuti.show', $p) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="bi bi-eye me-1"></i>Lihat
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>Belum ada pengajuan cuti.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card stat-card border-0" style="border-left-color:#0d6efd;">
