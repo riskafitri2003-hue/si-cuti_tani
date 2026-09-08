@@ -125,18 +125,25 @@ class PengajuanCutiController extends Controller
         $selesai = \Carbon\Carbon::parse($data['tanggal_selesai']);
         $lamaHari = $mulai->diffInDays($selesai) + 1;
 
-        $saldoCuti = SaldoCuti::where('nip', $pegawaiNip)->first();
-        if ($saldoCuti === null) {
-            return back()->withErrors('Data saldo cuti tidak ditemukan. Hubungi admin.');
-        }
+        $jenisCuti = JenisCuti::find($data['kode_jenis_cuti']);
+        $potonganSaldo = $jenisCuti?->isCutiBerpotonganSaldo() ?? false;
 
-        $totalSaldo = (int) $saldoCuti->saldo_n2 + (int) $saldoCuti->saldo_n1 + (int) $saldoCuti->saldo_n;
-        if ($lamaHari > $totalSaldo) {
-            return back()->withErrors("Sisa cuti tidak mencukupi. Total sisa (N-2: {$saldoCuti->saldo_n2}, N-1: {$saldoCuti->saldo_n1}, N: {$saldoCuti->saldo_n}) = {$totalSaldo} hari, diajukan: {$lamaHari} hari.");
-        }
+        $potongan = ['n2' => 0, 'n1' => 0, 'n' => 0];
 
-        // Potong saldo tertua dulu: N-2 -> N-1 -> N
-        $potongan = $this->alokasikanPotongan($saldoCuti, $lamaHari);
+        if ($potonganSaldo) {
+            $saldoCuti = SaldoCuti::where('nip', $pegawaiNip)->first();
+            if ($saldoCuti === null) {
+                return back()->withErrors('Data saldo cuti tidak ditemukan. Hubungi admin.');
+            }
+
+            $totalSaldo = (int) $saldoCuti->saldo_n2 + (int) $saldoCuti->saldo_n1 + (int) $saldoCuti->saldo_n;
+            if ($lamaHari > $totalSaldo) {
+                return back()->withErrors("Sisa cuti tidak mencukupi. Total sisa (N-2: {$saldoCuti->saldo_n2}, N-1: {$saldoCuti->saldo_n1}, N: {$saldoCuti->saldo_n}) = {$totalSaldo} hari, diajukan: {$lamaHari} hari.");
+            }
+
+            // Potong saldo tertua dulu: N-2 -> N-1 -> N
+            $potongan = $this->alokasikanPotongan($saldoCuti, $lamaHari);
+        }
 
         // Simpan dokumen pendukung
         $dokumenPath = null;
@@ -179,9 +186,11 @@ class PengajuanCutiController extends Controller
             'status_walikota' => 'pending',
         ]);
 
-        SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n2', $potongan['n2']);
-        SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n1', $potongan['n1']);
-        SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n', $potongan['n']);
+        if ($potonganSaldo) {
+            SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n2', $potongan['n2']);
+            SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n1', $potongan['n1']);
+            SaldoCuti::where('nip', $pegawaiNip)->decrement('saldo_n', $potongan['n']);
+        }
 
         // Kirim notifikasi ke pegawai
         $pegawai = Pegawai::find($pegawaiNip);

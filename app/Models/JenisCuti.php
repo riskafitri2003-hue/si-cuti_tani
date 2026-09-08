@@ -16,4 +16,9 @@ class JenisCuti extends Model
     {
         return $this->hasMany(PengajuanCuti::class);
     }
+
+    public function isCutiBerpotonganSaldo(): bool
+    {
+        return (int) $this->kode === 1;
+    }
 }
